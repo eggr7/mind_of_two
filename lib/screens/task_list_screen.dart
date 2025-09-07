@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/task.dart';  
+import '../models/task.dart';
 import '../providers/task_provider.dart';
 import '../widgets/task_card.dart';
 import './edit_task_screen.dart';
@@ -19,7 +19,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
   @override
   void initState() {
     super.initState();
-    // Load example tasks on startup
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<TaskProvider>(context, listen: false).loadSampleTasks();
     });
@@ -34,47 +33,101 @@ class _TaskListScreenState extends State<TaskListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Shared Tasks"),
+        backgroundColor: Colors.white,
+        elevation: 0,
         actions: [
           _buildFilterChip("All", "all"),
           _buildFilterChip("Urgent", "urgent"),
           _buildFilterChip("Important", "important"),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              "${activeTasks.length} active tasks",
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
+      body: Container(
+        color: const Color(0xFFF8F9FA),
+        child: Column(
+          children: [
+            // Header with task count
+            Container(
+              padding: const EdgeInsets.all(16),
+              color: Colors.white,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "${activeTasks.length} active tasks",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF616161),
+                    ),
+                  ),
+                  if (_currentFilter != "all")
+                    GestureDetector(
+                      onTap: () => setState(() => _currentFilter = "all"),
+                      child: const Text(
+                        "Clear filter",
+                        style: TextStyle(
+                          color: Color(0xFF6C63FF),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: tasks.length,
-              itemBuilder: (context, index) {
-                final task = tasks[index];
-                return TaskCard(
-                  task: task,
-                  onDelete: () => taskProvider.deleteTask(task.id),
-                  onToggle: () => taskProvider.toggleTask(task.id),
-                  onEdit: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => EditTaskScreen(task: task),
+            const SizedBox(height: 8),
+            // Task list
+            Expanded(
+              child: tasks.isEmpty
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.task_outlined,
+                            size: 64,
+                            color: Color(0xFF9E9E9E),
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            "No tasks found",
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Color(0xFF616161),
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            "Try changing your filter or add a new task",
+                            style: TextStyle(
+                              color: Color(0xFF9E9E9E),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                );
-              },
+                    )
+                  : ListView.builder(
+                      itemCount: tasks.length,
+                      itemBuilder: (context, index) {
+                        final task = tasks[index];
+                        return TaskCard(
+                          task: task,
+                          onDelete: () => _showDeleteDialog(context, task),
+                          onToggle: () => taskProvider.toggleTask(task.id),
+                          onEdit: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EditTaskScreen(task: task),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -96,46 +149,97 @@ class _TaskListScreenState extends State<TaskListScreen> {
             ),
           );
         },
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, size: 28),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-          // Here we can add other navigation logic if needed
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.task),
-            label: "Tasks",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add),
-            label: "Add",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: "Settings",
-          ),
-        ],
-      ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context, Task task) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Delete Task"),
+          content: Text("Are you sure you want to delete '${task.title}'?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Provider.of<TaskProvider>(context, listen: false)
+                    .deleteTask(task.id);
+                Navigator.pop(context);
+              },
+              child: const Text(
+                "Delete",
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildFilterChip(String label, String value) {
+    final isSelected = _currentFilter == value;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4.0),
       child: FilterChip(
-        label: Text(label),
-        selected: _currentFilter == value,
+        label: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : const Color(0xFF6C63FF),
+          ),
+        ),
+        selected: isSelected,
         onSelected: (selected) {
           setState(() {
             _currentFilter = selected ? value : "all";
           });
         },
+        backgroundColor: Colors.white,
+        selectedColor: const Color(0xFF6C63FF),
+        checkmarkColor: Colors.white,
+        side: const BorderSide(color: Color(0xFF6C63FF)),
+        shape: StadiumBorder(
+          side: BorderSide(
+            color: isSelected ? const Color(0xFF6C63FF) : const Color(0xFFE0E0E0),
+          ),
+        ),
       ),
+    );
+  }
+
+  BottomNavigationBar _buildBottomNavigationBar() {
+    return BottomNavigationBar(
+      currentIndex: _currentIndex,
+      onTap: (index) {
+        setState(() {
+          _currentIndex = index;
+        });
+        // TODO: Implement navigation to other screens
+      },
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.task_outlined),
+          activeIcon: Icon(Icons.task),
+          label: "Tasks",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.add_circle_outline),
+          activeIcon: Icon(Icons.add_circle),
+          label: "Add",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.settings_outlined),
+          activeIcon: Icon(Icons.settings),
+          label: "Settings",
+        ),
+      ],
     );
   }
 }

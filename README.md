@@ -46,3 +46,68 @@ To get a local copy up and running, follow these simple steps.
 4.  Run the app:
     ```sh
     flutter run
+
+### Usage 
+
+Viewing Tasks: The main screen displays all shared tasks with filtering options
+
+Adding Tasks: Tap the + button to create a new task with title, description, assignee, and priority
+
+Editing Tasks: Tap any task card to edit its details
+
+Completing Tasks: Use the checkmark icon to mark tasks as complete
+
+Deleting Tasks: Use the delete icon to remove tasks
+
+Filtering: Use the filter chips to view Urgent, Important, or All tasks
+
+### Task Properties 
+
+Each task includes:
+
+Title: Short description of the task
+
+Description: Detailed information about the task
+
+Assigned To: Options for "Me", "Partner", or "Both"
+
+Priority: Levels include "Urgent", "Important", and "Normal"
+
+Completion Status: Track whether tasks are done or pending
+
+
+### Contributing 
+
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
+
+Fork the Project
+
+Create your Feature Branch (git checkout -b feature/AmazingFeature)
+
+Commit your Changes (git commit -m 'Add some AmazingFeature')
+
+Push to the Branch (git push origin feature/AmazingFeature)
+
+Open a Pull Request
+
+## License
+
+Distributed under the MIT License. See LICENSE for more information.
+
+## Future Enhancements
+
+User authentication and cloud synchronization
+
+Due dates and reminders
+
+Recurring tasks
+
+Task categories and tags
+
+Progress tracking and statistics
+
+Dark mode support
+
+Multi-language support
+
+Push notifications
