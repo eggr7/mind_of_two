@@ -14,7 +14,6 @@ class TaskListScreen extends StatefulWidget {
 
 class _TaskListScreenState extends State<TaskListScreen> {
   String _currentFilter = "all";
-  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -28,7 +27,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
   Widget build(BuildContext context) {
     final taskProvider = Provider.of<TaskProvider>(context);
     final tasks = taskProvider.getFilteredTasks(_currentFilter);
-    final activeTasks = tasks.where((task) => !task.completed).toList();
+    final allTasks = taskProvider.tasks;
+    final activeTasksCount = allTasks.where((task) => !task.completed).length;
 
     return Scaffold(
       appBar: AppBar(
@@ -53,7 +53,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "${activeTasks.length} active tasks",
+                    "$activeTasksCount active of ${allTasks.length} total tasks",
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -78,34 +78,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
             // Task list
             Expanded(
               child: tasks.isEmpty
-                  ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.task_outlined,
-                            size: 64,
-                            color: Color(0xFF9E9E9E),
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            "No tasks found",
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Color(0xFF616161),
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            "Try changing your filter or add a new task",
-                            style: TextStyle(
-                              color: Color(0xFF9E9E9E),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    )
+                  ? _buildEmptyState()
                   : ListView.builder(
                       itemCount: tasks.length,
                       itemBuilder: (context, index) {
@@ -151,7 +124,35 @@ class _TaskListScreenState extends State<TaskListScreen> {
         },
         child: const Icon(Icons.add, size: 28),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.task_outlined,
+            size: 64,
+            color: const Color(0xFF9E9E9E),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            "No tasks found",
+            style: TextStyle(
+              fontSize: 18,
+              color: Color(0xFF616161),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Try changing your filter or add a new task",
+            style: TextStyle(color: Color(0xFF9E9E9E)),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
@@ -207,39 +208,12 @@ class _TaskListScreenState extends State<TaskListScreen> {
         side: const BorderSide(color: Color(0xFF6C63FF)),
         shape: StadiumBorder(
           side: BorderSide(
-            color: isSelected ? const Color(0xFF6C63FF) : const Color(0xFFE0E0E0),
+            color: isSelected
+                ? const Color(0xFF6C63FF)
+                : const Color(0xFFE0E0E0),
           ),
         ),
       ),
-    );
-  }
-
-  BottomNavigationBar _buildBottomNavigationBar() {
-    return BottomNavigationBar(
-      currentIndex: _currentIndex,
-      onTap: (index) {
-        setState(() {
-          _currentIndex = index;
-        });
-        // TODO: Implement navigation to other screens
-      },
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.task_outlined),
-          activeIcon: Icon(Icons.task),
-          label: "Tasks",
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.add_circle_outline),
-          activeIcon: Icon(Icons.add_circle),
-          label: "Add",
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings_outlined),
-          activeIcon: Icon(Icons.settings),
-          label: "Settings",
-        ),
-      ],
     );
   }
 }

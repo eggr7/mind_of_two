@@ -12,8 +12,10 @@ class TaskProvider with ChangeNotifier {
         return _tasks.where((task) => task.priority == "urgent").toList();
       case "important":
         return _tasks.where((task) => task.priority == "important").toList();
+      case "completed":
+        return _tasks.where((task) => task.completed).toList();
       default:
-        return _tasks;
+        return _tasks.where((task) => !task.completed).toList(); // Only show active tasks by default
     }
   }
 
@@ -42,6 +44,20 @@ class TaskProvider with ChangeNotifier {
     _tasks.removeWhere((task) => task.id == taskId);
     notifyListeners();
   }
+
+
+  void clearCompletedTasks() {
+  _tasks.removeWhere((task) => task.completed);
+  notifyListeners();
+}
+
+  void restoreTask(String taskId) {
+  final taskIndex = _tasks.indexWhere((task) => task.id == taskId);
+  if (taskIndex != -1) {
+    _tasks[taskIndex].completed = false;
+    notifyListeners();
+  }
+}
 
   // Load data samples
   void loadSampleTasks() {
