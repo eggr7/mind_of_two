@@ -20,6 +20,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
   late TextEditingController _descriptionController;
   late String _assignedTo;
   late String _priority;
+  late DateTime? _dueDate;
 
   @override
   void initState() {
@@ -30,6 +31,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     );
     _assignedTo = widget.task.assignedTo;
     _priority = widget.task.priority;
+    _dueDate = widget.task.dueDate;
   }
 
   @override
@@ -159,6 +161,37 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+
+                // Due Date Picker
+                ListTile(
+                  leading: const Icon(
+                    Icons.calendar_today,
+                    color: Color(0xFF6C63FF),
+                  ),
+                  title: Text(
+                    _dueDate == null
+                        ? "No due date"
+                        : "Due: ${_dueDate!.toString().split(' ')[0]}",
+                  ),
+                  trailing: _dueDate != null
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, color: Colors.red),
+                          onPressed: () => setState(() => _dueDate = null),
+                        )
+                      : null,
+                  onTap: () async {
+                    final selectedDate = await showDatePicker(
+                      context: context,
+                      initialDate: _dueDate ?? DateTime.now(),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime(2100),
+                    );
+                    if (selectedDate != null) {
+                      setState(() => _dueDate = selectedDate);
+                    }
+                  },
+                ),
                 const SizedBox(height: 32),
 
                 // Save Button
@@ -191,6 +224,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                             priority: _priority,
                             completed: widget.task.completed,
                             createdAt: widget.task.createdAt,
+                            dueDate: _dueDate,
                           );
 
                           if (widget.isNew) {

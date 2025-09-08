@@ -6,19 +6,20 @@ import 'providers/task_provider.dart';
 import 'screens/task_list_screen.dart';
 import 'screens/completed_tasks_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/calendar_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Init Hive
   await Hive.initFlutter();
-  
+
   // Register the adapter for Task
   Hive.registerAdapter(TaskAdapter());
-  
+
   // Open the box for tasks
   await Hive.openBox<Task>('tasks');
-  
+
   runApp(const MyApp());
 }
 
@@ -108,6 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = [
     const TaskListScreen(),
+    const CalendarScreen(), // New Calendar Screen
     const CompletedTasksScreen(),
     const SettingsScreen(),
   ];
@@ -128,6 +130,11 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.task_outlined),
             activeIcon: Icon(Icons.task),
             label: "Tasks",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today_outlined),
+            activeIcon: Icon(Icons.calendar_today),
+            label: "Calendar",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.check_circle_outline),

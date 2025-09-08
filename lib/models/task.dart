@@ -6,24 +6,27 @@ part 'task.g.dart'; // This file will generate automatically
 class Task {
   @HiveField(0)
   final String id;
-  
+
   @HiveField(1)
   String title;
-  
+
   @HiveField(2)
   String description;
-  
+
   @HiveField(3)
   String assignedTo; // "me", "partner", "both"
-  
+
   @HiveField(4)
-  String priority;   // "urgent", "important", "normal"
-  
+  String priority; // "urgent", "important", "normal"
+
   @HiveField(5)
   bool completed;
-  
+
   @HiveField(6)
   final DateTime createdAt;
+
+  @HiveField(7) // New field
+  DateTime? dueDate; // Optional due date
 
   Task({
     required this.id,
@@ -33,6 +36,7 @@ class Task {
     required this.priority,
     required this.completed,
     required this.createdAt,
+    this.dueDate, // New parameter
   });
 
   // Method to generate a unique ID (for simplicity, using timestamp)
