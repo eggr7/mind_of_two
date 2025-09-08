@@ -1,11 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'models/task.dart';
 import 'providers/task_provider.dart';
 import 'screens/task_list_screen.dart';
 import 'screens/completed_tasks_screen.dart';
 import 'screens/settings_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Init Hive
+  await Hive.initFlutter();
+  
+  // Register the adapter for Task
+  Hive.registerAdapter(TaskAdapter());
+  
+  // Open the box for tasks
+  await Hive.openBox<Task>('tasks');
+  
   runApp(const MyApp());
 }
 

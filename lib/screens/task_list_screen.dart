@@ -18,9 +18,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<TaskProvider>(context, listen: false).loadSampleTasks();
-    });
+    // La carga de datos ahora la maneja TaskProvider automáticamente
   }
 
   @override
