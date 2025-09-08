@@ -16,7 +16,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  Map<DateTime, List<Task>> _events = {};
 
   @override
   void initState() {
@@ -24,40 +23,32 @@ class _CalendarScreenState extends State<CalendarScreen> {
     _selectedDay = _focusedDay;
   }
 
-  void _loadEvents(List<Task> tasks) {
+  Map<DateTime, List<Task>> _groupTasksByDate(List<Task> tasks) {
     final Map<DateTime, List<Task>> events = {};
-    
     for (var task in tasks) {
       if (task.dueDate != null) {
-        // Normalizar la fecha (sin hora)
-        final date = DateTime(task.dueDate!.year, task.dueDate!.month, task.dueDate!.day);
-        
+        final date = DateTime.utc(task.dueDate!.year, task.dueDate!.month, task.dueDate!.day);
         if (events[date] == null) {
           events[date] = [];
         }
         events[date]!.add(task);
       }
     }
-    
-    setState(() {
-      _events = events;
-    });
-  }
-
-  List<Task> _getEventsForDay(DateTime day) {
-    return _events[day] ?? [];
+    return events;
   }
 
   @override
   Widget build(BuildContext context) {
     final taskProvider = Provider.of<TaskProvider>(context);
+    final events = _groupTasksByDate(taskProvider.tasks);
 
-    // Cargar eventos cuando el taskProvider cambie
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadEvents(taskProvider.tasks);
-    });
+    List<Task> getEventsForDay(DateTime day) {
+      // Normalize the day to UTC to match the keys in the events map
+      final normalizedDay = DateTime.utc(day.year, day.month, day.day);
+      return events[normalizedDay] ?? [];
+    }
 
-    final tasksForSelectedDay = _selectedDay != null ? _getEventsForDay(_selectedDay!) : [];
+    final tasksForSelectedDay = _selectedDay != null ? getEventsForDay(_selectedDay!) : [];
 
     return Scaffold(
       appBar: AppBar(
@@ -82,16 +73,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
               });
             },
             onFormatChanged: (format) {
-              setState(() {
-                _calendarFormat = format;
-              });
+              if (_calendarFormat != format) {
+                setState(() {
+                  _calendarFormat = format;
+                });
+              }
             },
             onPageChanged: (focusedDay) {
-              setState(() {
-                _focusedDay = focusedDay;
-              });
+              _focusedDay = focusedDay;
             },
-            eventLoader: _getEventsForDay,
+            eventLoader: getEventsForDay,
             calendarStyle: CalendarStyle(
               todayDecoration: BoxDecoration(
                 color: const Color(0xFF6C63FF).withOpacity(0.3),
@@ -151,15 +142,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             task.completed ? Icons.check_circle : Icons.radio_button_unchecked,
                             color: task.completed ? Colors.green : Colors.grey,
                           ),
-                          onTap: () async {
-                            await Navigator.push(
+                          onTap: () {
+                            Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (_) => EditTaskScreen(task: task),
                               ),
                             );
-                            // Recargar eventos después de regresar
-                            _loadEvents(taskProvider.tasks);
                           },
                         ),
                       );
@@ -169,8 +158,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
+        onPressed: () {
+          Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => EditTaskScreen(
@@ -188,8 +177,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
               ),
             ),
           );
-          // Recargar eventos después de regresar
-          _loadEvents(taskProvider.tasks);
         },
         child: const Icon(Icons.add),
       ),
