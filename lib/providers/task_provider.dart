@@ -4,12 +4,16 @@ import '../services/storage_service.dart';
 
 class TaskProvider with ChangeNotifier {
   List<Task> _tasks = [];
-
-  TaskProvider() {
-    _loadTasksFromStorage();
-  }
+  bool _isInitialized = false;
 
   List<Task> get tasks => _tasks;
+
+  Future<void> initialize() async {
+    if (!_isInitialized) {
+      await _loadTasksFromStorage();
+      _isInitialized = true;
+    }
+  }
 
   Future<void> _loadTasksFromStorage() async {
     _tasks = StorageService.loadTasks();
@@ -37,6 +41,7 @@ class TaskProvider with ChangeNotifier {
     _tasks.add(task);
     await _saveTasksToStorage();
     notifyListeners();
+    print("Task added: ${task.title}, Total tasks: ${_tasks.length}");
   }
 
   Future<void> toggleTask(String taskId) async {
@@ -45,6 +50,7 @@ class TaskProvider with ChangeNotifier {
       _tasks[taskIndex].completed = !_tasks[taskIndex].completed;
       await _saveTasksToStorage();
       notifyListeners();
+      print("Task toggled: ${_tasks[taskIndex].title}");
     }
   }
 
@@ -54,6 +60,7 @@ class TaskProvider with ChangeNotifier {
       _tasks[taskIndex] = updatedTask;
       await _saveTasksToStorage();
       notifyListeners();
+      print("Task updated: ${updatedTask.title}");
     }
   }
 
@@ -61,6 +68,7 @@ class TaskProvider with ChangeNotifier {
     _tasks.removeWhere((task) => task.id == taskId);
     await _saveTasksToStorage();
     notifyListeners();
+    print("Task deleted, Total tasks: ${_tasks.length}");
   }
 
   Future<void> clearCompletedTasks() async {
@@ -69,7 +77,7 @@ class TaskProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Load sample tasks for first-time users
+  // Load sample data
   Future<void> loadSampleTasks() async {
     if (_tasks.isEmpty) {
       _tasks.addAll([
@@ -81,6 +89,7 @@ class TaskProvider with ChangeNotifier {
           priority: "urgent",
           completed: false,
           createdAt: DateTime.now(),
+          dueDate: DateTime.now().add(const Duration(days: 7)),
         ),
         Task(
           id: "2",
@@ -90,6 +99,7 @@ class TaskProvider with ChangeNotifier {
           priority: "important",
           completed: false,
           createdAt: DateTime.now(),
+          dueDate: DateTime.now().add(const Duration(days: 2)),
         ),
         Task(
           id: "3",
@@ -99,6 +109,7 @@ class TaskProvider with ChangeNotifier {
           priority: "normal",
           completed: false,
           createdAt: DateTime.now(),
+          dueDate: DateTime.now().add(const Duration(days: 5)),
         ),
       ]);
       await _saveTasksToStorage();

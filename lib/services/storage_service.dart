@@ -30,7 +30,7 @@ class StorageService {
     final box = Hive.box<Task>(_tasksBoxName);
     final tasks = box.values.toList();
     final index = tasks.indexWhere((task) => task.id == updatedTask.id);
-    
+
     if (index != -1) {
       await box.putAt(index, updatedTask);
     }
@@ -41,7 +41,7 @@ class StorageService {
     final box = Hive.box<Task>(_tasksBoxName);
     final tasks = box.values.toList();
     final index = tasks.indexWhere((task) => task.id == taskId);
-    
+
     if (index != -1) {
       await box.deleteAt(index);
     }
@@ -51,7 +51,7 @@ class StorageService {
   static Future<void> clearCompletedTasks() async {
     final box = Hive.box<Task>(_tasksBoxName);
     final tasks = box.values.toList();
-    
+
     for (int i = tasks.length - 1; i >= 0; i--) {
       if (tasks[i].completed) {
         await box.deleteAt(i);

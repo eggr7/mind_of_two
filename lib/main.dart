@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => TaskProvider(),
+      create: (context) => TaskProvider()..initialize(),
       child: MaterialApp(
         title: 'Mind of Two',
         theme: ThemeData(
@@ -37,11 +37,11 @@ class MyApp extends StatelessWidget {
           colorScheme: const ColorScheme.light(
             primary: Color(0xFF6C63FF),
             secondary: Color(0xFFF50057),
-            // background: Color(0xFFF8F9FA),
+            background: Color(0xFFF8F9FA),
             surface: Colors.white,
             onPrimary: Colors.white,
             onSecondary: Colors.white,
-            // onBackground: Color(0xFF212121),
+            onBackground: Color(0xFF212121),
             onSurface: Color(0xFF212121),
           ),
           appBarTheme: const AppBarTheme(
@@ -109,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = [
     const TaskListScreen(),
-    const CalendarScreen(), // New Calendar Screen
+    const CalendarScreen(),
     const CompletedTasksScreen(),
     const SettingsScreen(),
   ];
@@ -137,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
             label: "Calendar",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.check_circle_outline),
+            icon: Icon(Icons.check_circle_outlined),
             activeIcon: Icon(Icons.check_circle),
             label: "Completed",
           ),

@@ -22,14 +22,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
-    _loadEvents();
   }
 
-  void _loadEvents() {
-    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+  void _loadEvents(List<Task> tasks) {
     final Map<DateTime, List<Task>> events = {};
     
-    for (var task in taskProvider.tasks) {
+    for (var task in tasks) {
       if (task.dueDate != null) {
         // Normalizar la fecha (sin hora)
         final date = DateTime(task.dueDate!.year, task.dueDate!.month, task.dueDate!.day);
@@ -52,6 +50,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final taskProvider = Provider.of<TaskProvider>(context);
+
+    // Cargar eventos cuando el taskProvider cambie
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadEvents(taskProvider.tasks);
+    });
+
     final tasksForSelectedDay = _selectedDay != null ? _getEventsForDay(_selectedDay!) : [];
 
     return Scaffold(
@@ -82,7 +87,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
               });
             },
             onPageChanged: (focusedDay) {
-              _focusedDay = focusedDay;
+              setState(() {
+                _focusedDay = focusedDay;
+              });
             },
             eventLoader: _getEventsForDay,
             calendarStyle: CalendarStyle(
@@ -144,13 +151,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             task.completed ? Icons.check_circle : Icons.radio_button_unchecked,
                             color: task.completed ? Colors.green : Colors.grey,
                           ),
-                          onTap: () {
-                            Navigator.push(
+                          onTap: () async {
+                            await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (_) => EditTaskScreen(task: task),
                               ),
                             );
+                            // Recargar eventos después de regresar
+                            _loadEvents(taskProvider.tasks);
                           },
                         ),
                       );
@@ -160,8 +169,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => EditTaskScreen(
@@ -173,12 +182,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   priority: "normal",
                   completed: false,
                   createdAt: DateTime.now(),
-                  dueDate: _selectedDay, // Pre-seleccionar la fecha del calendario
+                  dueDate: _selectedDay,
                 ),
                 isNew: true,
               ),
             ),
-          ).then((_) => _loadEvents()); // Recargar eventos al regresar
+          );
+          // Recargar eventos después de regresar
+          _loadEvents(taskProvider.tasks);
         },
         child: const Icon(Icons.add),
       ),

@@ -16,14 +16,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
   String _currentFilter = "all";
 
   @override
-  void initState() {
-    super.initState();
-    // La carga de datos ahora la maneja TaskProvider automáticamente
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final taskProvider = Provider.of<TaskProvider>(context);
+    final taskProvider = Provider.of<TaskProvider>(context, listen: true);
     final tasks = taskProvider.getFilteredTasks(_currentFilter);
     final allTasks = taskProvider.tasks;
     final activeTasksCount = allTasks.where((task) => !task.completed).length;
@@ -43,7 +37,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
         color: const Color(0xFFF8F9FA),
         child: Column(
           children: [
-            // Header with task count
             Container(
               padding: const EdgeInsets.all(16),
               color: Colors.white,
@@ -73,7 +66,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            // Task list
             Expanded(
               child: tasks.isEmpty
                   ? _buildEmptyState()
@@ -130,18 +122,11 @@ class _TaskListScreenState extends State<TaskListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.task_outlined,
-            size: 64,
-            color: const Color(0xFF9E9E9E),
-          ),
+          Icon(Icons.task_outlined, size: 64, color: const Color(0xFF9E9E9E)),
           const SizedBox(height: 16),
           const Text(
             "No tasks found",
-            style: TextStyle(
-              fontSize: 18,
-              color: Color(0xFF616161),
-            ),
+            style: TextStyle(fontSize: 18, color: Color(0xFF616161)),
           ),
           const SizedBox(height: 8),
           const Text(
@@ -168,14 +153,13 @@ class _TaskListScreenState extends State<TaskListScreen> {
             ),
             TextButton(
               onPressed: () {
-                Provider.of<TaskProvider>(context, listen: false)
-                    .deleteTask(task.id);
+                Provider.of<TaskProvider>(
+                  context,
+                  listen: false,
+                ).deleteTask(task.id);
                 Navigator.pop(context);
               },
-              child: const Text(
-                "Delete",
-                style: TextStyle(color: Colors.red),
-              ),
+              child: const Text("Delete", style: TextStyle(color: Colors.red)),
             ),
           ],
         );
