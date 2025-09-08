@@ -27,7 +27,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final Map<DateTime, List<Task>> events = {};
     for (var task in tasks) {
       if (task.dueDate != null) {
-        final date = DateTime.utc(task.dueDate!.year, task.dueDate!.month, task.dueDate!.day);
+        final date = DateTime.utc(
+          task.dueDate!.year,
+          task.dueDate!.month,
+          task.dueDate!.day,
+        );
         if (events[date] == null) {
           events[date] = [];
         }
@@ -37,18 +41,30 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return events;
   }
 
+  Color _getPriorityColor(String priority) {
+    switch (priority) {
+      case 'urgent':
+        return Colors.red;
+      case 'important':
+        return Colors.orange;
+      default:
+        return Colors.blue;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final taskProvider = Provider.of<TaskProvider>(context);
     final events = _groupTasksByDate(taskProvider.tasks);
 
     List<Task> getEventsForDay(DateTime day) {
-      // Normalize the day to UTC to match the keys in the events map
       final normalizedDay = DateTime.utc(day.year, day.month, day.day);
       return events[normalizedDay] ?? [];
     }
 
-    final tasksForSelectedDay = _selectedDay != null ? getEventsForDay(_selectedDay!) : [];
+    final tasksForSelectedDay = _selectedDay != null
+        ? getEventsForDay(_selectedDay!)
+        : [];
 
     return Scaffold(
       appBar: AppBar(
@@ -83,6 +99,31 @@ class _CalendarScreenState extends State<CalendarScreen> {
               _focusedDay = focusedDay;
             },
             eventLoader: getEventsForDay,
+            calendarBuilders: CalendarBuilders(
+              markerBuilder: (context, date, events) {
+                if (events.isEmpty) return const SizedBox();
+                final tasks = events.cast<Task>();
+                final highestPriority = tasks.fold<String>('normal', (
+                  prev,
+                  task,
+                ) {
+                  if (task.priority == 'urgent') return 'urgent';
+                  if (task.priority == 'important' && prev != 'urgent')
+                    return 'important';
+                  return prev;
+                });
+                return Container(
+                  margin: const EdgeInsets.only(top: 20),
+                  padding: const EdgeInsets.all(1),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _getPriorityColor(highestPriority),
+                  ),
+                  width: 5,
+                  height: 5,
+                );
+              },
+            ),
             calendarStyle: CalendarStyle(
               todayDecoration: BoxDecoration(
                 color: const Color(0xFF6C63FF).withOpacity(0.3),
@@ -90,10 +131,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
               ),
               selectedDecoration: const BoxDecoration(
                 color: Color(0xFF6C63FF),
-                shape: BoxShape.circle,
-              ),
-              markerDecoration: BoxDecoration(
-                color: const Color(0xFFF50057),
                 shape: BoxShape.circle,
               ),
               outsideDaysVisible: false,
@@ -114,10 +151,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               _selectedDay != null
                   ? "Tasks for ${_selectedDay!.day}/${_selectedDay!.month}/${_selectedDay!.year}"
                   : "Select a date",
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 8),
@@ -134,12 +168,24 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     itemBuilder: (context, index) {
                       final task = tasksForSelectedDay[index];
                       return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(
+                            color: _getPriorityColor(task.priority),
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         child: ListTile(
                           title: Text(task.title),
                           subtitle: Text(task.description),
                           trailing: Icon(
-                            task.completed ? Icons.check_circle : Icons.radio_button_unchecked,
+                            task.completed
+                                ? Icons.check_circle
+                                : Icons.radio_button_unchecked,
                             color: task.completed ? Colors.green : Colors.grey,
                           ),
                           onTap: () {
