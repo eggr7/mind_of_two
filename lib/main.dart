@@ -36,11 +36,11 @@ class MyApp extends StatelessWidget {
           colorScheme: const ColorScheme.light(
             primary: Color(0xFF6C63FF),
             secondary: Color(0xFFF50057),
-            background: Color(0xFFF8F9FA),
+            // background: Color(0xFFF8F9FA),
             surface: Colors.white,
             onPrimary: Colors.white,
             onSecondary: Colors.white,
-            onBackground: Color(0xFF212121),
+            // onBackground: Color(0xFF212121),
             onSurface: Color(0xFF212121),
           ),
           appBarTheme: const AppBarTheme(
