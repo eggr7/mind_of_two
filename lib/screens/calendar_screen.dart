@@ -67,91 +67,102 @@ class _CalendarScreenState extends State<CalendarScreen> {
         : [];
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA), // You can change this color
       appBar: AppBar(
         title: const Text("Calendar"),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: Column(
         children: [
-          TableCalendar(
-            firstDay: DateTime.utc(2020, 1, 1),
-            lastDay: DateTime.utc(2030, 12, 31),
-            focusedDay: _focusedDay,
-            calendarFormat: _calendarFormat,
-            selectedDayPredicate: (day) {
-              return isSameDay(_selectedDay, day);
-            },
-            onDaySelected: (selectedDay, focusedDay) {
-              setState(() {
-                _selectedDay = selectedDay;
-                _focusedDay = focusedDay;
-              });
-            },
-            onFormatChanged: (format) {
-              if (_calendarFormat != format) {
-                setState(() {
-                  _calendarFormat = format;
-                });
-              }
-            },
-            onPageChanged: (focusedDay) {
-              _focusedDay = focusedDay;
-            },
-            eventLoader: getEventsForDay,
-            calendarBuilders: CalendarBuilders(
-              markerBuilder: (context, date, events) {
-                if (events.isEmpty) return const SizedBox();
-                final tasks = events.cast<Task>();
-                final highestPriority = tasks.fold<String>('normal', (
-                  prev,
-                  task,
-                ) {
-                  if (task.priority == 'urgent') return 'urgent';
-                  if (task.priority == 'important' && prev != 'urgent')
-                    return 'important';
-                  return prev;
-                });
-                return Container(
-                  margin: const EdgeInsets.only(top: 20),
-                  padding: const EdgeInsets.all(1),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _getPriorityColor(highestPriority),
-                  ),
-                  width: 5,
-                  height: 5,
-                );
+          Container(
+            margin: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE0F2F1), // You can change this color
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: TableCalendar(
+              firstDay: DateTime.utc(2020, 1, 1),
+              lastDay: DateTime.utc(2030, 12, 31),
+              focusedDay: _focusedDay,
+              calendarFormat: _calendarFormat,
+              selectedDayPredicate: (day) {
+                return isSameDay(_selectedDay, day);
               },
-            ),
-            calendarStyle: CalendarStyle(
-              todayDecoration: BoxDecoration(
-                color: const Color(0xFF6C63FF).withOpacity(0.3),
-                shape: BoxShape.circle,
+              onDaySelected: (selectedDay, focusedDay) {
+                setState(() {
+                  _selectedDay = selectedDay;
+                  _focusedDay = focusedDay;
+                });
+              },
+              onFormatChanged: (format) {
+                if (_calendarFormat != format) {
+                  setState(() {
+                    _calendarFormat = format;
+                  });
+                }
+              },
+              onPageChanged: (focusedDay) {
+                _focusedDay = focusedDay;
+              },
+              eventLoader: getEventsForDay,
+              calendarBuilders: CalendarBuilders(
+                markerBuilder: (context, date, events) {
+                  if (events.isEmpty) return const SizedBox();
+                  final tasks = events.cast<Task>();
+                  final highestPriority = tasks.fold<String>('normal', (
+                    prev,
+                    task,
+                  ) {
+                    if (task.priority == 'urgent') return 'urgent';
+                    if (task.priority == 'important' && prev != 'urgent')
+                      return 'important';
+                    return prev;
+                  });
+                  return Container(
+                    margin: const EdgeInsets.only(top: 20),
+                    padding: const EdgeInsets.all(1),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _getPriorityColor(highestPriority),
+                    ),
+                    width: 5,
+                    height: 5,
+                  );
+                },
               ),
-              selectedDecoration: const BoxDecoration(
-                color: Color(0xFF6C63FF),
-                shape: BoxShape.circle,
+              calendarStyle: CalendarStyle(
+                todayDecoration: BoxDecoration(
+                  color: const Color(0xFF6C63FF).withOpacity(0.3),
+                  shape: BoxShape.circle,
+                ),
+                selectedDecoration: const BoxDecoration(
+                  color: Color(0xFF6C63FF),
+                  shape: BoxShape.circle,
+                ),
+                outsideDaysVisible: false,
+                weekendTextStyle: const TextStyle(
+                  color: Color(0xFF00796B), // You can change this color
+                ),
               ),
-              outsideDaysVisible: false,
-            ),
-            headerStyle: HeaderStyle(
-              titleCentered: true,
-              formatButtonVisible: false,
-              titleTextStyle: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+              headerStyle: HeaderStyle(
+                titleCentered: true,
+                formatButtonVisible: false,
+                titleTextStyle: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            daysOfWeekHeight: 20,
-            daysOfWeekStyle: const DaysOfWeekStyle(
-              weekdayStyle: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-              weekendStyle: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+              daysOfWeekHeight: 20,
+              daysOfWeekStyle: const DaysOfWeekStyle(
+                weekdayStyle: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                weekendStyle: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
