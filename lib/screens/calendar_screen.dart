@@ -72,6 +72,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
         title: const Text("Calendar"),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.date_range),
+            onPressed: () async {
+              final DateTime? picked = await showDatePicker(
+                context: context,
+                initialDate: _selectedDay ?? DateTime.now(),
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2030),
+              );
+              if (picked != null && picked != _selectedDay) {
+                setState(() {
+                  _selectedDay = picked;
+                  _focusedDay = picked;
+                });
+              }
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -80,6 +99,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFFE0F2F1), // You can change this color
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFFB2DFDB), // You can change this color
+                width: 2,
+              ),
             ),
             child: TableCalendar(
               firstDay: DateTime.utc(2020, 1, 1),
@@ -149,8 +172,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 titleCentered: true,
                 formatButtonVisible: false,
                 titleTextStyle: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF004D40), // You can change this color
                 ),
               ),
               daysOfWeekHeight: 20,
