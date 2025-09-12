@@ -143,6 +143,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            daysOfWeekHeight: 20,
+            daysOfWeekStyle: const DaysOfWeekStyle(
+              weekdayStyle: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              weekendStyle: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           Padding(

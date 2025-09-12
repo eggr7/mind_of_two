@@ -10,16 +10,16 @@ import 'screens/calendar_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  
   // Init Hive
   await Hive.initFlutter();
-
+  
   // Register the adapter for Task
   Hive.registerAdapter(TaskAdapter());
-
+  
   // Open the box for tasks
   await Hive.openBox<Task>('tasks');
-
+  
   runApp(const MyApp());
 }
 
@@ -71,7 +71,10 @@ class MyApp extends StatelessWidget {
               fontWeight: FontWeight.w600,
               color: Color(0xFF212121),
             ),
-            bodyMedium: TextStyle(fontSize: 16, color: Color(0xFF424242)),
+            bodyMedium: TextStyle(
+              fontSize: 16,
+              color: Color(0xFF424242),
+            ),
           ),
           inputDecorationTheme: InputDecorationTheme(
             border: OutlineInputBorder(
