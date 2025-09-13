@@ -133,24 +133,32 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 markerBuilder: (context, date, events) {
                   if (events.isEmpty) return const SizedBox();
                   final tasks = events.cast<Task>();
-                  final highestPriority = tasks.fold<String>('normal', (
-                    prev,
-                    task,
-                  ) {
-                    if (task.priority == 'urgent') return 'urgent';
-                    if (task.priority == 'important' && prev != 'urgent')
-                      return 'important';
-                    return prev;
-                  });
+                  final allCompleted =
+                      tasks.every((task) => task.completed);
+                  final color = allCompleted
+                      ? Colors.green
+                      : _getPriorityColor(tasks
+                          .fold<String>('normal', (prev, task) {
+                          if (task.priority == 'urgent') return 'urgent';
+                          if (task.priority == 'important' &&
+                              prev != 'urgent') {
+                            return 'important';
+                          }
+                          return prev;
+                        }));
                   return Container(
                     margin: const EdgeInsets.only(top: 20),
                     padding: const EdgeInsets.all(1),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _getPriorityColor(highestPriority),
+                      color: color,
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 1,
+                      ),
                     ),
-                    width: 5,
-                    height: 5,
+                    width: 12,
+                    height: 10,
                   );
                 },
               ),
