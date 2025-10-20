@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/task.dart';
 import '../providers/task_provider.dart';
+import '../providers/category_provider.dart';
 import '../widgets/task_card.dart';
 import './edit_task_screen.dart';
 
@@ -17,10 +18,12 @@ class _TaskListScreenState extends State<TaskListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final taskProvider = Provider.of<TaskProvider>(context, listen: true);
+    final taskProvider = Provider.of<TaskProvider>(context);
+    final categoryProvider = Provider.of<CategoryProvider>(context);
     final tasks = taskProvider.getFilteredTasks(_currentFilter);
     final allTasks = taskProvider.tasks;
     final activeTasksCount = allTasks.where((task) => !task.completed).length;
+    final categoryStats = taskProvider.getCategoryStats();
 
     return Scaffold(
       appBar: AppBar(
@@ -31,9 +34,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
           _buildFilterChip("Important", "important"),
         ],
       ),
-      body: Container(
-        color: Theme.of(context).colorScheme.background,
-        child: Column(
+      body: Column(
           children: [
             Container(
               padding: const EdgeInsets.all(16),
@@ -63,6 +64,89 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 ],
               ),
             ),
+            // Category filters
+            if (categoryProvider.categories.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                color: Theme.of(context).colorScheme.surface,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Categories",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: categoryProvider.categories.map<Widget>((category) {
+                          final taskCount = categoryStats[category.id] ?? 0;
+                          final filterValue = "category_${category.id}";
+                          final isSelected = _currentFilter == filterValue;
+                          
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(category.icon),
+                                  const SizedBox(width: 4),
+                                  Text(category.name),
+                                  if (taskCount > 0) ...[
+                                    const SizedBox(width: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? Colors.white.withOpacity(0.3)
+                                            : category.colorValue.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Text(
+                                        taskCount.toString(),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : category.colorValue,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setState(() {
+                                  _currentFilter = selected ? filterValue : "all";
+                                  debugPrint('Filter changed to: $_currentFilter');
+                                });
+                              },
+                              backgroundColor: category.colorValue.withOpacity(0.1),
+                              selectedColor: category.colorValue,
+                              checkmarkColor: Colors.white,
+                              side: BorderSide(color: category.colorValue),
+                              labelStyle: TextStyle(
+                                color: isSelected ? Colors.white : category.colorValue,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 8),
             Expanded(
               child: tasks.isEmpty
@@ -89,7 +173,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
             ),
           ],
         ),
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -104,6 +187,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   priority: "normal",
                   completed: false,
                   createdAt: DateTime.now(),
+                  categoryIds: [],
                 ),
                 isNew: true,
               ),

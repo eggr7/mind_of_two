@@ -28,6 +28,9 @@ class Task {
   @HiveField(7) // New field
   DateTime? dueDate; // Optional due date
 
+  @HiveField(8)
+  List<String> categoryIds; // List of category IDs
+
   Task({
     required this.id,
     required this.title,
@@ -36,8 +39,9 @@ class Task {
     required this.priority,
     required this.completed,
     required this.createdAt,
-    this.dueDate, // New parameter
-  });
+    this.dueDate,
+    List<String>? categoryIds,
+  }) : categoryIds = categoryIds ?? [];
 
   // Method to generate a unique ID (for simplicity, using timestamp)
   static String generateId() {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/task.dart';
+import '../providers/category_provider.dart';
 
 class TaskCard extends StatelessWidget {
   final Task task;
@@ -52,6 +54,8 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final categoryProvider = Provider.of<CategoryProvider>(context, listen: false);
+    final taskCategories = categoryProvider.getCategoriesByIds(task.categoryIds);
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: InkWell(
@@ -134,6 +138,40 @@ class TaskCard extends StatelessWidget {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                // Categories chips
+                if (taskCategories.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      children: taskCategories.map<Widget>((category) => Chip(
+                        label: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              category.icon,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              category.name,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: category.colorValue,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        backgroundColor: category.colorValue.withOpacity(0.1),
+                        labelPadding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                      )).toList(),
                     ),
                   ),
                 Row(

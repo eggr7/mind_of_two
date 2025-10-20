@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/task.dart';
 import '../providers/task_provider.dart';
+import '../providers/category_provider.dart';
 
 class EditTaskScreen extends StatefulWidget {
   final Task task;
@@ -20,6 +21,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
   late String _assignedTo;
   late String _priority;
   late DateTime? _dueDate;
+  late List<String> _selectedCategoryIds;
 
   @override
   void initState() {
@@ -31,6 +33,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     _assignedTo = widget.task.assignedTo;
     _priority = widget.task.priority;
     _dueDate = widget.task.dueDate;
+    _selectedCategoryIds = List.from(widget.task.categoryIds);
   }
 
   @override
@@ -43,6 +46,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
   @override
   Widget build(BuildContext context) {
     final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+    final categoryProvider = Provider.of<CategoryProvider>(context, listen: true);
 
     return Scaffold(
       appBar: AppBar(
@@ -189,6 +193,73 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                     }
                   },
                 ),
+                const SizedBox(height: 16),
+
+                // Categories Section
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Categories",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        if (categoryProvider.categories.isEmpty)
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Text(
+                                "No categories available. Add some in Settings.",
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          )
+                        else
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: categoryProvider.categories.map<Widget>((category) {
+                              final isSelected = _selectedCategoryIds.contains(category.id);
+                              return FilterChip(
+                                label: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(category.icon),
+                                    const SizedBox(width: 4),
+                                    Text(category.name),
+                                  ],
+                                ),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  setState(() {
+                                    if (selected) {
+                                      _selectedCategoryIds.add(category.id);
+                                    } else {
+                                      _selectedCategoryIds.remove(category.id);
+                                    }
+                                  });
+                                },
+                                backgroundColor: category.colorValue.withOpacity(0.1),
+                                selectedColor: category.colorValue.withOpacity(0.3),
+                                checkmarkColor: category.colorValue,
+                                side: BorderSide(color: category.colorValue),
+                              );
+                            }).toList(),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 32),
 
                 // Save Button
@@ -206,6 +277,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                           completed: widget.task.completed,
                           createdAt: widget.task.createdAt,
                           dueDate: _dueDate,
+                          categoryIds: _selectedCategoryIds,
                         );
 
                         if (widget.isNew) {

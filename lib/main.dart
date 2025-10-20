@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/task.dart';
+import 'models/category.dart';
 import 'providers/task_provider.dart';
+import 'providers/category_provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/task_list_screen.dart';
 import 'screens/completed_tasks_screen.dart';
@@ -12,17 +14,59 @@ import 'screens/calendar_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Init Hive
-  await Hive.initFlutter();
-  
-  // Register the adapter for Task
-  Hive.registerAdapter(TaskAdapter());
-  
-  // Open the box for tasks
-  await Hive.openBox<Task>('tasks');
-  
-  // Open the box for settings
-  await Hive.openBox<dynamic>('settings');
+  try {
+    // Init Hive with Flutter-specific directory
+    await Hive.initFlutter();
+    debugPrint('Hive initialized');
+    
+    // Register the adapters (only once)
+    if (!Hive.isAdapterRegistered(0)) {
+      Hive.registerAdapter(TaskAdapter());
+      debugPrint('TaskAdapter registered');
+    }
+    if (!Hive.isAdapterRegistered(1)) {
+      Hive.registerAdapter(CategoryAdapter());
+      debugPrint('CategoryAdapter registered');
+    }
+    
+    // Close boxes if they're already open (for hot restart)
+    if (Hive.isBoxOpen('tasks')) {
+      await Hive.box<Task>('tasks').close();
+      debugPrint('Closed existing tasks box');
+    }
+    if (Hive.isBoxOpen('categories')) {
+      await Hive.box<Category>('categories').close();
+      debugPrint('Closed existing categories box');
+    }
+    if (Hive.isBoxOpen('settings')) {
+      await Hive.box<dynamic>('settings').close();
+      debugPrint('Closed existing settings box');
+    }
+    
+    // Open the boxes
+    await Hive.openBox<Task>('tasks');
+    debugPrint('Tasks box opened with ${Hive.box<Task>('tasks').length} items');
+    
+    await Hive.openBox<Category>('categories');
+    debugPrint('Categories box opened with ${Hive.box<Category>('categories').length} items');
+    
+    await Hive.openBox<dynamic>('settings');
+    debugPrint('Settings box opened');
+    
+    // Check if we need to migrate data (clear corrupted data)
+    final tasksBox = Hive.box<Task>('tasks');
+    try {
+      // Try to read all tasks to verify they're valid
+      tasksBox.values.toList();
+      debugPrint('✓ Tasks data is valid');
+    } catch (e) {
+      debugPrint('⚠️ Corrupted task data detected, clearing: $e');
+      await tasksBox.clear();
+      debugPrint('✓ Tasks box cleared');
+    }
+  } catch (e) {
+    debugPrint('✗ Error initializing Hive: $e');
+  }
   
   runApp(const MyApp());
 }
@@ -35,6 +79,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => TaskProvider()..initialize()),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()..initialize()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: Consumer<ThemeProvider>(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
 import '../providers/theme_provider.dart';
+import 'manage_categories_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -82,6 +83,21 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    _buildSettingItem(
+                      context: context,
+                      icon: Icons.category_outlined,
+                      title: "Manage Categories",
+                      subtitle: "Add, edit, or delete task categories",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ManageCategoriesScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    const Divider(),
                     _buildSettingItem(
                       context: context,
                       icon: Icons.notifications_outlined,
