@@ -1,0 +1,275 @@
+# Cursor AI Rules for Mind of Two Project
+
+## Project Context
+This is a Flutter mobile application called "Mind of Two" - a shared task manager for couples or partners. The app helps users manage shared responsibilities with features like task lists, calendar view, completion tracking, and statistics.
+
+## Code Language
+- ALL code, comments, documentation strings, and variable names MUST be in English
+- User-facing strings in the UI are currently in English but should be prepared for internationalization
+- Spanish is only used for communication with the project owner, never in code
+
+## Architecture & Patterns
+
+### State Management
+- Use Provider pattern for all state management
+- Provider class: `TaskProvider` located in `lib/providers/task_provider.dart`
+- Always use `ChangeNotifier` mixin for providers
+- Call `notifyListeners()` after state changes
+- Access providers using `Provider.of<TaskProvider>(context)` or `context.read<TaskProvider>()`
+- Use `listen: false` when accessing provider methods without needing rebuild
+
+### Data Persistence
+- Use Hive for local storage (NoSQL database)
+- All models must use `@HiveType` and `@HiveField` annotations
+- Generate adapters with: `flutter pub run build_runner build --delete-conflicting-outputs`
+- Storage operations are abstracted in `lib/services/storage_service.dart`
+- Never directly access Hive boxes outside of `StorageService`
+
+### Navigation
+- Use `Navigator.push()` for screen navigation
+- Bottom navigation bar handles main screens (Tasks, Calendar, Completed, Settings)
+- Modal screens (Edit Task) use MaterialPageRoute
+- Always use named constructors for screens when appropriate
+
+## Project Structure
+
+```
+lib/
+├── main.dart              # Entry point, theme configuration, bottom nav
+├── models/               # Data models with Hive annotations
+├── providers/            # State management (Provider pattern)
+├── screens/              # Full-page UI screens
+├── widgets/              # Reusable UI components
+└── services/             # Business logic and data access
+```
+
+## File Organization Rules
+
+### Naming Conventions
+- Files: `snake_case.dart` (e.g., `task_list_screen.dart`)
+- Classes: `PascalCase` (e.g., `TaskListScreen`)
+- Variables & functions: `camelCase` (e.g., `taskProvider`, `loadTasks()`)
+- Constants: `camelCase` with `const` (e.g., `const primaryColor`)
+- Private members: prefix with `_` (e.g., `_loadTasks()`)
+
+### File Type Suffixes
+- Screens: `*_screen.dart` (e.g., `task_list_screen.dart`)
+- Widgets: descriptive names (e.g., `task_card.dart`)
+- Models: singular nouns (e.g., `task.dart`)
+- Providers: `*_provider.dart` (e.g., `task_provider.dart`)
+- Services: `*_service.dart` (e.g., `storage_service.dart`)
+
+## Widget Structure
+
+### Screen Widgets
+- Always extend `StatefulWidget` if state is needed
+- Use `StatelessWidget` for static screens
+- Extract complex widgets into separate files in `widgets/`
+- Keep build methods clean and readable (< 50 lines when possible)
+- Use private methods for building sections (e.g., `_buildHeader()`)
+
+### Reusable Widgets
+- Create in `lib/widgets/` directory
+- Make them configurable via constructor parameters
+- Use `const` constructors when possible for performance
+- Document required vs optional parameters
+
+### Widget Best Practices
+- Extract repeated UI patterns into reusable widgets
+- Use `const` wherever possible for better performance
+- Prefer composition over inheritance
+- Keep widgets single-purpose and focused
+
+## Styling & Theme
+
+### Color Scheme
+- Primary: `Color(0xFF6C63FF)` (purple)
+- Secondary: `Color(0xFFF50057)` (pink/red)
+- Background: `Color(0xFFF8F9FA)` (light gray)
+- Surface: `Colors.white`
+- Priority colors:
+  - Urgent: `Color(0xFFF50057)` (red/pink)
+  - Important: `Color(0xFFFF9800)` (orange)
+  - Normal: `Color(0xFF6C63FF)` (purple)
+
+### Design Principles
+- Use Material Design 3 components
+- Consistent border radius: `12-16px` for cards and buttons
+- Elevation: `1-2` for subtle shadows
+- Spacing: multiples of `8` (8, 16, 24, 32)
+- Use theme values from `ThemeData` when possible
+
+## Code Style
+
+### Dart Best Practices
+- Always use type annotations for clarity
+- Prefer `final` over `var` when value won't change
+- Use trailing commas for better formatting
+- Follow official Dart style guide
+- Use `??` and `?.` for null safety
+- Prefer expression bodies (`=>`) for simple functions
+
+### Comments
+- Use `//` for single-line comments
+- Use `///` for documentation comments on public APIs
+- Explain WHY, not WHAT (code should be self-documenting)
+- Keep comments in English only
+
+### Error Handling
+- Use try-catch for async operations when appropriate
+- Provide user feedback via SnackBar for operations
+- Log errors with `print()` for debugging (remove in production)
+- Never let the app crash - handle edge cases
+
+## Common Patterns in This Project
+
+### Adding a New Task
+```dart
+final task = Task(
+  id: Task.generateId(),
+  title: titleController.text,
+  description: descriptionController.text,
+  assignedTo: assignedTo,
+  priority: priority,
+  completed: false,
+  createdAt: DateTime.now(),
+  dueDate: selectedDate,
+);
+taskProvider.addTask(task);
+```
+
+### Updating State
+```dart
+// In Provider class
+Future<void> updateTask(Task updatedTask) async {
+  final index = _tasks.indexWhere((task) => task.id == updatedTask.id);
+  if (index != -1) {
+    _tasks[index] = updatedTask;
+    await _saveTasksToStorage();
+    notifyListeners();
+  }
+}
+```
+
+### User Feedback
+```dart
+ScaffoldMessenger.of(context).showSnackBar(
+  const SnackBar(
+    content: Text("Task added successfully!"),
+    backgroundColor: Colors.green,
+  ),
+);
+```
+
+### Dialogs
+```dart
+showDialog(
+  context: context,
+  builder: (BuildContext context) {
+    return AlertDialog(
+      title: const Text("Confirm Action"),
+      content: const Text("Are you sure?"),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("Cancel"),
+        ),
+        TextButton(
+          onPressed: () {
+            // Perform action
+            Navigator.pop(context);
+          },
+          child: const Text("Confirm"),
+        ),
+      ],
+    );
+  },
+);
+```
+
+## Testing Guidelines
+
+### When Adding New Features
+- Write widget tests for UI components
+- Write unit tests for business logic in providers
+- Test edge cases (empty lists, null values, etc.)
+- Run `flutter test` before committing
+
+### Test File Naming
+- Place tests in `test/` directory
+- Mirror lib structure: `lib/screens/task_list_screen.dart` → `test/screens/task_list_screen_test.dart`
+- Use `_test.dart` suffix
+
+## Dependencies
+
+### Adding New Packages
+- Check pub.dev for package quality and maintenance
+- Add to appropriate section in pubspec.yaml:
+  - `dependencies:` for runtime packages
+  - `dev_dependencies:` for development tools
+- Run `flutter pub get` after adding
+- Update documentation if package is critical
+
+### Current Key Dependencies
+- `provider: ^6.0.5` - State management
+- `hive: ^2.2.3` - Local database
+- `hive_flutter: ^1.1.0` - Hive Flutter integration
+- `table_calendar: ^3.0.9` - Calendar widget
+- `intl: ^0.18.1` - Internationalization
+
+## Git Commit Messages
+- Use present tense ("Add feature" not "Added feature")
+- Use imperative mood ("Move cursor to..." not "Moves cursor to...")
+- Limit first line to 72 characters
+- Reference issues and pull requests when relevant
+- Examples:
+  - `Add due date filtering to calendar view`
+  - `Fix task deletion bug in CompletedTasksScreen`
+  - `Refactor TaskProvider for better performance`
+
+## Performance Considerations
+- Use `const` constructors wherever possible
+- Avoid rebuilding entire screens - use `Consumer` widget for specific parts
+- Keep provider granularity appropriate (don't create too many providers)
+- Use `ListView.builder` for long lists, not `ListView` with List.generate
+- Lazy load data when appropriate
+
+## Accessibility
+- Provide `tooltip` for IconButtons
+- Use semantic labels for important widgets
+- Ensure sufficient color contrast
+- Test with TalkBack/VoiceOver
+
+## When Suggesting Changes
+- Maintain existing code style and patterns
+- Consider performance implications
+- Keep changes minimal and focused
+- Explain reasoning for architectural decisions
+- Follow DRY principle (Don't Repeat Yourself)
+- Ensure changes work on all platforms (Android, iOS, Web, Desktop)
+
+## Things to Avoid
+- Don't mix state management patterns (stick with Provider)
+- Don't access Hive boxes directly - use StorageService
+- Don't use Spanish in code or comments
+- Don't create God classes - keep classes focused
+- Don't ignore linting warnings
+- Don't hardcode strings that should be localizable
+- Don't use deprecated Flutter/Dart APIs
+
+## Platform-Specific Notes
+- This app targets Android, iOS, Windows, macOS, Linux, and Web
+- Test platform-specific features before suggesting them
+- Use platform channels only when necessary
+- Prefer cross-platform solutions
+
+## Future Considerations
+- Code should be prepared for:
+  - Multi-language support (i18n)
+  - Cloud synchronization
+  - User authentication
+  - Dark mode
+  - Offline-first architecture
+- Keep data models flexible for future fields
+- Use proper abstraction layers for easy refactoring
+

@@ -157,8 +157,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         width: 1,
                       ),
                     ),
-                    width: 12,
-                    height: 10,
+                    width: 12, // Change size of the circle
+                    height: 10, // Change height of the circle
                   );
                 },
               ),
@@ -234,8 +234,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: ListTile(
-                          title: Text(task.title),
-                          subtitle: Text(task.description),
+                          title: Text(
+                            task.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          subtitle: Text(
+                            task.description,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
                           trailing: Icon(
                             task.completed
                                 ? Icons.check_circle
@@ -283,3 +295,5 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 }
+
+
