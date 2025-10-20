@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
+import '../providers/theme_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -8,53 +9,51 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final taskProvider = Provider.of<TaskProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final completedTasks = taskProvider.tasks.where((task) => task.completed).length;
     final totalTasks = taskProvider.tasks.length;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("Settings"),
-        backgroundColor: Colors.white,
-        elevation: 0,
       ),
       body: Container(
-        color: const Color(0xFFF8F9FA),
+        color: Theme.of(context).colorScheme.background,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             // Statistics Card
             Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Statistics",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF212121),
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 16),
                     _buildStatItem(
+                      context: context,
                       icon: Icons.task_outlined,
                       title: "Total Tasks",
                       value: "$totalTasks",
                     ),
                     const Divider(),
                     _buildStatItem(
+                      context: context,
                       icon: Icons.check_circle_outline,
                       title: "Completed Tasks",
                       value: "$completedTasks",
                     ),
                     const Divider(),
                     _buildStatItem(
+                      context: context,
                       icon: Icons.analytics_outlined,
                       title: "Completion Rate",
                       value: totalTasks > 0 
@@ -69,39 +68,52 @@ class SettingsScreen extends StatelessWidget {
 
             // App Settings Card
             Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "App Settings",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF212121),
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 16),
                     _buildSettingItem(
+                      context: context,
                       icon: Icons.notifications_outlined,
                       title: "Notifications",
                       subtitle: "Enable task reminders",
                       onTap: () {},
                     ),
                     const Divider(),
-                    _buildSettingItem(
-                      icon: Icons.palette_outlined,
-                      title: "Theme",
-                      subtitle: "Change app appearance",
-                      onTap: () {},
+                    SwitchListTile(
+                      secondary: Icon(
+                        themeProvider.isDarkMode 
+                            ? Icons.dark_mode 
+                            : Icons.light_mode,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      title: const Text(
+                        "Dark Mode",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      subtitle: const Text(
+                        "Toggle dark theme",
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      value: themeProvider.isDarkMode,
+                      onChanged: (_) => themeProvider.toggleTheme(),
                     ),
                     const Divider(),
                     _buildSettingItem(
+                      context: context,
                       icon: Icons.language_outlined,
                       title: "Language",
                       subtitle: "English",
@@ -115,25 +127,22 @@ class SettingsScreen extends StatelessWidget {
 
             // Account Card
             Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Account",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF212121),
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 16),
                     _buildSettingItem(
+                      context: context,
                       icon: Icons.person_outline,
                       title: "Profile",
                       subtitle: "Edit your information",
@@ -141,6 +150,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     const Divider(),
                     _buildSettingItem(
+                      context: context,
                       icon: Icons.security_outlined,
                       title: "Privacy & Security",
                       subtitle: "Manage your data",
@@ -148,6 +158,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     const Divider(),
                     _buildSettingItem(
+                      context: context,
                       icon: Icons.exit_to_app_outlined,
                       title: "Sign Out",
                       subtitle: "Sign out of your account",
@@ -162,31 +173,29 @@ class SettingsScreen extends StatelessWidget {
 
             // App Info Card
             Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "App Information",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF212121),
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 16),
                     _buildSettingItem(
+                      context: context,
                       icon: Icons.info_outline,
                       title: "Version",
                       subtitle: "1.0.0",
                     ),
                     const Divider(),
                     _buildSettingItem(
+                      context: context,
                       icon: Icons.email_outlined,
                       title: "Contact Support",
                       subtitle: "support@mindoftwo.com",
@@ -194,6 +203,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     const Divider(),
                     _buildSettingItem(
+                      context: context,
                       icon: Icons.description_outlined,
                       title: "Privacy Policy",
                       subtitle: "View our privacy policy",
@@ -210,29 +220,30 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildStatItem({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String value,
   }) {
     return Row(
       children: [
-        Icon(icon, color: const Color(0xFF6C63FF), size: 24),
+        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
         const SizedBox(width: 16),
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
-              color: Color(0xFF616161),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
             ),
           ),
         ),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF212121),
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],
@@ -240,6 +251,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildSettingItem({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
@@ -250,27 +262,31 @@ class SettingsScreen extends StatelessWidget {
       onTap: onTap,
       leading: Icon(
         icon,
-        color: isDestructive ? Colors.red : const Color(0xFF6C63FF),
+        color: isDestructive ? Colors.red : Theme.of(context).colorScheme.primary,
       ),
       title: Text(
         title,
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
-          color: isDestructive ? Colors.red : const Color(0xFF212121),
+          color: isDestructive ? Colors.red : Theme.of(context).colorScheme.onSurface,
         ),
       ),
       subtitle: Text(
         subtitle,
         style: TextStyle(
           fontSize: 14,
-          color: isDestructive ? Colors.red.withOpacity(0.8) : const Color(0xFF757575),
+          color: isDestructive 
+              ? Colors.red.withOpacity(0.8) 
+              : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
         ),
       ),
       trailing: onTap != null
           ? Icon(
               Icons.chevron_right,
-              color: isDestructive ? Colors.red : const Color(0xFF9E9E9E),
+              color: isDestructive 
+                  ? Colors.red 
+                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
             )
           : null,
     );

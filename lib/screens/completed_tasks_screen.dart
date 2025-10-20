@@ -15,8 +15,6 @@ class CompletedTasksScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Completed Tasks"),
-        backgroundColor: Colors.white,
-        elevation: 0,
         actions: [
           if (completedTasks.isNotEmpty)
             IconButton(
@@ -27,29 +25,31 @@ class CompletedTasksScreen extends StatelessWidget {
         ],
       ),
       body: Container(
-        color: const Color(0xFFF8F9FA),
+        color: Theme.of(context).colorScheme.background,
         child: completedTasks.isEmpty
-            ? const Center(
+            ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.check_circle_outline,
                       size: 64,
-                      color: Color(0xFF9E9E9E),
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Text(
                       "No completed tasks yet",
                       style: TextStyle(
                         fontSize: 18,
-                        color: Color(0xFF616161),
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       "Complete some tasks to see them here",
-                      style: TextStyle(color: Color(0xFF9E9E9E)),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                      ),
                     ),
                   ],
                 ),
@@ -59,16 +59,16 @@ class CompletedTasksScreen extends StatelessWidget {
                   // Header with count
                   Container(
                     padding: const EdgeInsets.all(16),
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           "${completedTasks.length} completed tasks",
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF616161),
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                           ),
                         ),
                         Text(

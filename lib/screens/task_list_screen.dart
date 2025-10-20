@@ -25,8 +25,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Shared Tasks"),
-        backgroundColor: Colors.white,
-        elevation: 0,
         actions: [
           _buildFilterChip("All", "all"),
           _buildFilterChip("Urgent", "urgent"),
@@ -34,30 +32,30 @@ class _TaskListScreenState extends State<TaskListScreen> {
         ],
       ),
       body: Container(
-        color: const Color(0xFFF8F9FA),
+        color: Theme.of(context).colorScheme.background,
         child: Column(
           children: [
             Container(
               padding: const EdgeInsets.all(16),
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     "$activeTasksCount active of ${allTasks.length} total tasks",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF616161),
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                     ),
                   ),
                   if (_currentFilter != "all")
                     GestureDetector(
                       onTap: () => setState(() => _currentFilter = "all"),
-                      child: const Text(
+                      child: Text(
                         "Clear filter",
                         style: TextStyle(
-                          color: Color(0xFF6C63FF),
+                          color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -122,16 +120,25 @@ class _TaskListScreenState extends State<TaskListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.task_outlined, size: 64, color: const Color(0xFF9E9E9E)),
+          Icon(
+            Icons.task_outlined, 
+            size: 64, 
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+          ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             "No tasks found",
-            style: TextStyle(fontSize: 18, color: Color(0xFF616161)),
+            style: TextStyle(
+              fontSize: 18, 
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             "Try changing your filter or add a new task",
-            style: TextStyle(color: Color(0xFF9E9E9E)),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -175,7 +182,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
         label: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF6C63FF),
+            color: isSelected 
+                ? Theme.of(context).colorScheme.onPrimary 
+                : Theme.of(context).colorScheme.primary,
           ),
         ),
         selected: isSelected,
@@ -184,15 +193,15 @@ class _TaskListScreenState extends State<TaskListScreen> {
             _currentFilter = selected ? value : "all";
           });
         },
-        backgroundColor: Colors.white,
-        selectedColor: const Color(0xFF6C63FF),
-        checkmarkColor: Colors.white,
-        side: const BorderSide(color: Color(0xFF6C63FF)),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        selectedColor: Theme.of(context).colorScheme.primary,
+        checkmarkColor: Theme.of(context).colorScheme.onPrimary,
+        side: BorderSide(color: Theme.of(context).colorScheme.primary),
         shape: StadiumBorder(
           side: BorderSide(
             color: isSelected
-                ? const Color(0xFF6C63FF)
-                : const Color(0xFFE0E0E0),
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
           ),
         ),
       ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import '../models/task.dart';
 import '../providers/task_provider.dart';
@@ -48,8 +47,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.isNew ? "Add New Task" : "Edit Task"),
-        backgroundColor: Colors.white,
-        elevation: 0,
         actions: widget.isNew
             ? null
             : [
@@ -60,7 +57,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
               ],
       ),
       body: Container(
-        color: const Color(0xFFF8F9FA),
+        color: Theme.of(context).colorScheme.background,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Form(
@@ -165,9 +162,9 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
 
                 // Due Date Picker
                 ListTile(
-                  leading: const Icon(
+                  leading: Icon(
                     Icons.calendar_today,
-                    color: Color(0xFF6C63FF),
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   title: Text(
                     _dueDate == null
@@ -197,80 +194,62 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 // Save Button
                 SizedBox(
                   width: double.infinity,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF6C63FF), Color(0xFF4A43C9)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        final updatedTask = Task(
+                          id: widget.task.id,
+                          title: _titleController.text,
+                          description: _descriptionController.text,
+                          assignedTo: _assignedTo,
+                          priority: _priority,
+                          completed: widget.task.completed,
+                          createdAt: widget.task.createdAt,
+                          dueDate: _dueDate,
+                        );
+
+                        if (widget.isNew) {
+                          taskProvider.addTask(updatedTask);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Task added successfully!"),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        } else {
+                          taskProvider.updateTask(updatedTask);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Task updated successfully!"),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+
+                        Navigator.pop(context);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.purple.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(widget.isNew ? Icons.add : Icons.save),
+                        const SizedBox(width: 10),
+                        Text(
+                          widget.isNew ? "Add Task" : "Save Changes",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          final updatedTask = Task(
-                            id: widget.task.id,
-                            title: _titleController.text,
-                            description: _descriptionController.text,
-                            assignedTo: _assignedTo,
-                            priority: _priority,
-                            completed: widget.task.completed,
-                            createdAt: widget.task.createdAt,
-                            dueDate: _dueDate,
-                          );
-
-                          if (widget.isNew) {
-                            taskProvider.addTask(updatedTask);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Task added successfully!"),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-                          } else {
-                            taskProvider.updateTask(updatedTask);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Task updated successfully!"),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-                          }
-
-                          Navigator.pop(context);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        foregroundColor: Colors.white,
-                        shadowColor: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(widget.isNew ? Icons.add : Icons.save),
-                          const SizedBox(width: 10),
-                          Text(
-                            widget.isNew ? "Add Task" : "Save Changes",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 ),
@@ -283,7 +262,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
   }
 
   void _showDeleteDialog(BuildContext context, TaskProvider taskProvider) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(

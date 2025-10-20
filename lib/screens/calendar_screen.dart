@@ -62,16 +62,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
       return events[normalizedDay] ?? [];
     }
 
-    final tasksForSelectedDay = _selectedDay != null
+    final List<Task> tasksForSelectedDay = _selectedDay != null
         ? getEventsForDay(_selectedDay!)
         : [];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA), // You can change this color
+      backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
         title: const Text("Calendar"),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.date_range),
@@ -97,10 +95,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
           Container(
             margin: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFE0F2F1), // You can change this color
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: const Color(0xFFB2DFDB), // You can change this color
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                 width: 2,
               ),
             ),
@@ -164,25 +162,36 @@ class _CalendarScreenState extends State<CalendarScreen> {
               ),
               calendarStyle: CalendarStyle(
                 todayDecoration: BoxDecoration(
-                  color: const Color(0xFF6C63FF).withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                   shape: BoxShape.circle,
                 ),
-                selectedDecoration: const BoxDecoration(
-                  color: Color(0xFF6C63FF),
+                selectedDecoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
                   shape: BoxShape.circle,
                 ),
                 outsideDaysVisible: false,
-                weekendTextStyle: const TextStyle(
-                  color: Color(0xFF00796B), // You can change this color
+                weekendTextStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+                defaultTextStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               headerStyle: HeaderStyle(
                 titleCentered: true,
                 formatButtonVisible: false,
-                titleTextStyle: const TextStyle(
+                titleTextStyle: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF004D40), // You can change this color
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                leftChevronIcon: Icon(
+                  Icons.chevron_left,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                rightChevronIcon: Icon(
+                  Icons.chevron_right,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               daysOfWeekHeight: 20,
@@ -211,10 +220,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
           const SizedBox(height: 8),
           Expanded(
             child: tasksForSelectedDay.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
                       "No tasks for this date",
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                      ),
                     ),
                   )
                 : ListView.builder(
@@ -236,28 +247,31 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         child: ListTile(
                           title: Text(
                             task.title,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                           subtitle: Text(
                             task.description,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                             ),
                           ),
                           trailing: Icon(
                             task.completed
                                 ? Icons.check_circle
                                 : Icons.radio_button_unchecked,
-                            color: task.completed ? Colors.green : Colors.grey,
+                            color: task.completed 
+                                ? Colors.green 
+                                : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                           ),
                           onTap: () {
-                            Navigator.push(
+                            Navigator.push<void>(
                               context,
-                              MaterialPageRoute(
+                              MaterialPageRoute<void>(
                                 builder: (_) => EditTaskScreen(task: task),
                               ),
                             );
@@ -271,9 +285,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
+          Navigator.push<void>(
             context,
-            MaterialPageRoute(
+            MaterialPageRoute<void>(
               builder: (_) => EditTaskScreen(
                 task: Task(
                   id: Task.generateId(),

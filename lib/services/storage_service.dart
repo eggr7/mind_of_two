@@ -3,6 +3,8 @@ import '../models/task.dart';
 
 class StorageService {
   static const String _tasksBoxName = 'tasks';
+  static const String _settingsBoxName = 'settings';
+  static const String _themeKey = 'theme_mode';
 
   // Save all tasks (overwrite existing)
   static Future<void> saveTasks(List<Task> tasks) async {
@@ -57,5 +59,17 @@ class StorageService {
         await box.deleteAt(i);
       }
     }
+  }
+
+  // Save theme mode
+  static Future<void> saveThemeMode(String mode) async {
+    final box = Hive.box<dynamic>(_settingsBoxName);
+    await box.put(_themeKey, mode);
+  }
+
+  // Load theme mode
+  static String loadThemeMode() {
+    final box = Hive.box<dynamic>(_settingsBoxName);
+    return box.get(_themeKey, defaultValue: 'light') as String;
   }
 }

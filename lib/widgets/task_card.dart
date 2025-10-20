@@ -54,8 +54,6 @@ class TaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: task.completed ? null : onEdit,
         borderRadius: BorderRadius.circular(16),
@@ -87,11 +85,11 @@ class TaskCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF212121),
+                          color: Theme.of(context).colorScheme.onSurface,
                           decoration: task.completed
                               ? TextDecoration.lineThrough
                               : null,
-                          decorationColor: Colors.grey,
+                          decorationColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -106,7 +104,7 @@ class TaskCard extends StatelessWidget {
                     child: Text(
                       task.description,
                       style: TextStyle(
-                        color: const Color(0xFF616161),
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                         fontSize: 14,
                         decoration: task.completed
                             ? TextDecoration.lineThrough
@@ -122,17 +120,17 @@ class TaskCard extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.calendar_today,
                           size: 16,
-                          color: Colors.grey,
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           "Due: ${task.dueDate!.toString().split(' ')[0]}",
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                           ),
                         ),
                       ],
@@ -144,9 +142,12 @@ class TaskCard extends StatelessWidget {
                     Chip(
                       label: Text(
                         _getAssignedToText(),
-                        style: const TextStyle(fontSize: 12),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
-                      backgroundColor: const Color(0xFFE3F2FD),
+                      backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                       labelPadding: const EdgeInsets.symmetric(
                         horizontal: 8,
                         vertical: 2,
@@ -178,7 +179,7 @@ class TaskCard extends StatelessWidget {
                         task.completed ? Icons.undo : Icons.check_circle,
                         color: task.completed
                             ? const Color(0xFF4CAF50)
-                            : const Color(0xFF9E9E9E),
+                            : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                       ),
                       onPressed: onToggle,
                       tooltip: task.completed ? 'Mark as pending' : 'Complete',
