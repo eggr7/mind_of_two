@@ -4,6 +4,7 @@ import '../models/task.dart';
 import '../providers/task_provider.dart';
 import '../providers/category_provider.dart';
 import '../widgets/task_card.dart';
+import '../widgets/workspace_selector_widget.dart';
 import './edit_task_screen.dart';
 
 class TaskListScreen extends StatefulWidget {
@@ -28,6 +29,11 @@ class _TaskListScreenState extends State<TaskListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Shared Tasks"),
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: WorkspaceSelectorWidget(),
+        ),
+        leadingWidth: 120,
         actions: [
           _buildFilterChip("All", "all"),
           _buildFilterChip("Urgent", "urgent"),
@@ -160,9 +166,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
                           onDelete: () => _showDeleteDialog(context, task),
                           onToggle: () => taskProvider.toggleTask(task.id),
                           onEdit: () {
-                            Navigator.push(
+                            Navigator.push<void>(
                               context,
-                              MaterialPageRoute(
+                              MaterialPageRoute<void>(
                                 builder: (_) => EditTaskScreen(task: task),
                               ),
                             );
@@ -175,9 +181,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
         ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
+          Navigator.push<void>(
             context,
-            MaterialPageRoute(
+            MaterialPageRoute<void>(
               builder: (_) => EditTaskScreen(
                 task: Task(
                   id: Task.generateId(),
@@ -231,7 +237,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
   }
 
   void _showDeleteDialog(BuildContext context, Task task) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(

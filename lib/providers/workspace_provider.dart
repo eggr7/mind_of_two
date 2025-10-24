@@ -12,7 +12,8 @@ class WorkspaceProvider with ChangeNotifier {
   WorkspaceModel? _activeWorkspace;
   bool _isLoading = false;
   String? _errorMessage;
-  StreamSubscription? _workspacesSubscription;
+  StreamSubscription<List<WorkspaceModel>>? _workspacesSubscription;
+  String? _savedWorkspaceId; // Store the saved workspace ID
 
   List<WorkspaceModel> get workspaces => _workspaces;
   WorkspaceModel? get activeWorkspace => _activeWorkspace;
@@ -23,7 +24,7 @@ class WorkspaceProvider with ChangeNotifier {
   // Initialize workspace provider
   void initialize(String userId) {
     debugPrint('📁 WorkspaceProvider: Initializing for user: $userId');
-    _loadActiveWorkspaceFromSettings();
+    _savedWorkspaceId = _loadActiveWorkspaceFromSettings();
     _listenToWorkspaces(userId);
   }
 
@@ -35,10 +36,22 @@ class WorkspaceProvider with ChangeNotifier {
         debugPrint('📁 WorkspaceProvider: Received ${workspaces.length} workspaces');
         _workspaces = workspaces;
         
-        // If no active workspace and we have workspaces, set the first one as active
+        // Try to restore saved workspace first
         if (_activeWorkspace == null && workspaces.isNotEmpty) {
-          debugPrint('📁 WorkspaceProvider: Auto-selecting first workspace: ${workspaces.first.name}');
-          setActiveWorkspace(workspaces.first);
+          if (_savedWorkspaceId != null) {
+            // Try to find the saved workspace
+            final savedWorkspace = workspaces.firstWhere(
+              (w) => w.id == _savedWorkspaceId,
+              orElse: () => workspaces.first,
+            );
+            debugPrint('📁 WorkspaceProvider: Restoring saved workspace: ${savedWorkspace.name}');
+            setActiveWorkspace(savedWorkspace);
+            _savedWorkspaceId = null; // Clear after first use
+          } else {
+            // No saved workspace, select the first one
+            debugPrint('📁 WorkspaceProvider: Auto-selecting first workspace: ${workspaces.first.name}');
+            setActiveWorkspace(workspaces.first);
+          }
         }
         
         // If active workspace was deleted, clear it
@@ -51,9 +64,9 @@ class WorkspaceProvider with ChangeNotifier {
         
         notifyListeners();
       },
-      onError: (error) {
+      onError: (Object error) {
         debugPrint('📁 WorkspaceProvider: Error: $error');
-        _errorMessage = 'Error al cargar workspaces: $error';
+        _errorMessage = 'Error loading workspaces: $error';
         notifyListeners();
       },
     );
@@ -88,7 +101,7 @@ class WorkspaceProvider with ChangeNotifier {
       return workspace;
     } catch (e) {
       _isLoading = false;
-      _errorMessage = 'Error al crear workspace: $e';
+      _errorMessage = 'Error creating workspace: $e';
       notifyListeners();
       return null;
     }
@@ -158,7 +171,7 @@ class WorkspaceProvider with ChangeNotifier {
       return true;
     } catch (e) {
       _isLoading = false;
-      _errorMessage = 'Error al salir del workspace: $e';
+      _errorMessage = 'Error leaving workspace: $e';
       notifyListeners();
       return false;
     }
@@ -190,7 +203,7 @@ class WorkspaceProvider with ChangeNotifier {
       return true;
     } catch (e) {
       _isLoading = false;
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = 'Error deleting workspace: ${e.toString().replaceAll('Exception: ', '')}';
       notifyListeners();
       return false;
     }
@@ -230,7 +243,7 @@ class WorkspaceProvider with ChangeNotifier {
       return true;
     } catch (e) {
       _isLoading = false;
-      _errorMessage = 'Error al actualizar workspace: $e';
+      _errorMessage = 'Error updating workspace: $e';
       notifyListeners();
       return false;
     }
@@ -243,7 +256,7 @@ class WorkspaceProvider with ChangeNotifier {
       notifyListeners();
       return newCode;
     } catch (e) {
-      _errorMessage = 'Error al regenerar código: $e';
+      _errorMessage = 'Error regenerating invite code: $e';
       notifyListeners();
       return null;
     }
@@ -260,18 +273,19 @@ class WorkspaceProvider with ChangeNotifier {
   }
 
   // Load active workspace ID from Hive settings
-  void _loadActiveWorkspaceFromSettings() {
+  String? _loadActiveWorkspaceFromSettings() {
     try {
       final settingsBox = Hive.box<dynamic>('settings');
       final workspaceId = settingsBox.get('activeWorkspaceId') as String?;
       
       if (workspaceId != null) {
-        // Will be set when workspaces are loaded
-        debugPrint('Saved active workspace ID: $workspaceId');
+        debugPrint('📁 WorkspaceProvider: Found saved workspace ID: $workspaceId');
+        return workspaceId;
       }
     } catch (e) {
-      debugPrint('Error loading active workspace: $e');
+      debugPrint('📁 WorkspaceProvider: Error loading active workspace: $e');
     }
+    return null;
   }
 
   // Clear error

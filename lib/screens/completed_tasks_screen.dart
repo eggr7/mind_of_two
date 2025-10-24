@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/task.dart';
 import '../providers/task_provider.dart';
 import '../widgets/task_card.dart';
+import '../widgets/workspace_selector_widget.dart';
 
 class CompletedTasksScreen extends StatelessWidget {
   const CompletedTasksScreen({super.key});
@@ -15,6 +16,11 @@ class CompletedTasksScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Completed Tasks"),
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: WorkspaceSelectorWidget(),
+        ),
+        leadingWidth: 120,
         actions: [
           if (completedTasks.isNotEmpty)
             IconButton(
@@ -113,7 +119,7 @@ class CompletedTasksScreen extends StatelessWidget {
   }
 
   void _showDeleteDialog(BuildContext context, Task task) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -142,7 +148,7 @@ class CompletedTasksScreen extends StatelessWidget {
   }
 
   void _showClearAllDialog(BuildContext context, TaskProvider taskProvider) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(

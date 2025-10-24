@@ -266,8 +266,8 @@ class _AuthGateState extends State<AuthGate> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer3<AuthProvider, WorkspaceProvider, TaskProvider>(
-      builder: (context, authProvider, workspaceProvider, taskProvider, child) {
+    return Consumer4<AuthProvider, WorkspaceProvider, TaskProvider, CategoryProvider>(
+      builder: (context, authProvider, workspaceProvider, taskProvider, categoryProvider, child) {
         debugPrint('🔄 AuthGate: Building...');
         debugPrint('   - isAuthenticated: ${authProvider.isAuthenticated}');
         debugPrint('   - hasWorkspace: ${workspaceProvider.hasWorkspace}');
@@ -306,11 +306,11 @@ class _AuthGateState extends State<AuthGate> {
           return const WorkspaceSelectorScreen();
         }
 
-        // Authenticated with workspace - connect to TaskProvider and show main app
+        // Authenticated with workspace - connect providers and show main app
         debugPrint('🔄 AuthGate: User authenticated with workspace → HomeScreen');
         if (workspaceProvider.activeWorkspace != null && authProvider.currentUser != null) {
           final workspaceId = workspaceProvider.activeWorkspace!.id;
-          // Only initialize task provider once per workspace change
+          // Only initialize providers once per workspace change
           if (_initializedTaskWorkspaceId != workspaceId) {
             _initializedTaskWorkspaceId = workspaceId;
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -319,6 +319,8 @@ class _AuthGateState extends State<AuthGate> {
                 workspaceId,
                 authProvider.currentUser!.uid,
               );
+              debugPrint('✅ Connecting CategoryProvider to workspace: $workspaceId');
+              categoryProvider.setActiveWorkspace(workspaceId);
             });
           }
         }

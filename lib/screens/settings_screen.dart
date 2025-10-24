@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/auth_provider.dart';
+import '../widgets/workspace_selector_widget.dart';
 import 'manage_categories_screen.dart';
+import 'workspace/workspace_selector_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -11,12 +14,18 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final taskProvider = Provider.of<TaskProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
     final completedTasks = taskProvider.tasks.where((task) => task.completed).length;
     final totalTasks = taskProvider.tasks.length;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("Settings"),
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: WorkspaceSelectorWidget(),
+        ),
+        leadingWidth: 120,
       ),
       body: Container(
         color: Theme.of(context).colorScheme.background,
@@ -85,13 +94,28 @@ class SettingsScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     _buildSettingItem(
                       context: context,
+                      icon: Icons.workspaces_outlined,
+                      title: "Manage Workspaces",
+                      subtitle: "Switch, create, or join workspaces",
+                      onTap: () {
+                        Navigator.push<void>(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => const WorkspaceSelectorScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    const Divider(),
+                    _buildSettingItem(
+                      context: context,
                       icon: Icons.category_outlined,
                       title: "Manage Categories",
                       subtitle: "Add, edit, or delete task categories",
                       onTap: () {
-                        Navigator.push(
+                        Navigator.push<void>(
                           context,
-                          MaterialPageRoute(
+                          MaterialPageRoute<void>(
                             builder: (_) => const ManageCategoriesScreen(),
                           ),
                         );
@@ -178,7 +202,33 @@ class SettingsScreen extends StatelessWidget {
                       icon: Icons.exit_to_app_outlined,
                       title: "Sign Out",
                       subtitle: "Sign out of your account",
-                      onTap: () {},
+                      onTap: () async {
+                        // Show confirmation dialog
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Sign Out'),
+                            content: const Text('Are you sure you want to sign out?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text(
+                                  'Sign Out',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                        
+                        if (confirmed == true) {
+                          await authProvider.signOut();
+                        }
+                      },
                       isDestructive: true,
                     ),
                   ],

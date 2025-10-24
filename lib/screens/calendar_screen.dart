@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../providers/task_provider.dart';
 import '../models/task.dart';
+import '../widgets/workspace_selector_widget.dart';
 import './edit_task_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -70,6 +71,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
       backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
         title: const Text("Calendar"),
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: WorkspaceSelectorWidget(),
+        ),
+        leadingWidth: 120,
         actions: [
           IconButton(
             icon: const Icon(Icons.date_range),

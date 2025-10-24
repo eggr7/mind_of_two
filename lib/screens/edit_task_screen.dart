@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/task.dart';
 import '../providers/task_provider.dart';
 import '../providers/category_provider.dart';
+import '../providers/auth_provider.dart';
 
 class EditTaskScreen extends StatefulWidget {
   final Task task;
@@ -47,6 +48,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
   Widget build(BuildContext context) {
     final taskProvider = Provider.of<TaskProvider>(context, listen: false);
     final categoryProvider = Provider.of<CategoryProvider>(context, listen: true);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -281,7 +283,11 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                         );
 
                         if (widget.isNew) {
-                          taskProvider.addTask(updatedTask);
+                          // Pass userId when adding new task to save to Firestore
+                          taskProvider.addTask(
+                            updatedTask,
+                            userId: authProvider.currentUser?.uid,
+                          );
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text("Task added successfully!"),

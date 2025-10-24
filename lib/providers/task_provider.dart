@@ -8,7 +8,7 @@ class TaskProvider with ChangeNotifier {
   List<Task> _tasks = [];
   bool _isInitialized = false;
   String? _activeWorkspaceId;
-  StreamSubscription? _firestoreSubscription;
+  StreamSubscription<List<Task>>? _firestoreSubscription;
   final FirestoreService _firestoreService = FirestoreService();
 
   List<Task> get tasks => _tasks;
@@ -39,12 +39,14 @@ class TaskProvider with ChangeNotifier {
 
   // Set active workspace and start listening to Firestore
   void setActiveWorkspace(String? workspaceId, String? userId) {
+    debugPrint('🔄 TaskProvider: Setting active workspace to: $workspaceId');
     _activeWorkspaceId = workspaceId;
     
     // Cancel previous subscription
     _firestoreSubscription?.cancel();
     
     if (workspaceId != null && userId != null) {
+      debugPrint('🔄 TaskProvider: Starting Firestore listener for workspace: $workspaceId');
       // Listen to workspace tasks from Firestore
       _firestoreSubscription = _firestoreService
           .getWorkspaceTasks(workspaceId)
@@ -52,14 +54,18 @@ class TaskProvider with ChangeNotifier {
             (tasks) {
               _tasks = tasks;
               notifyListeners();
-              debugPrint('Firestore tasks updated: ${tasks.length}');
+              debugPrint('✅ Firestore tasks updated: ${tasks.length} tasks in workspace $workspaceId');
+              for (var task in tasks) {
+                debugPrint('   - ${task.title} (${task.completed ? "completed" : "active"})');
+              }
             },
-            onError: (error) {
-              debugPrint('Error listening to Firestore tasks: $error');
+            onError: (Object error) {
+              debugPrint('❌ Error listening to Firestore tasks: $error');
             },
           );
     } else {
       // Load local tasks if no workspace
+      debugPrint('💾 No workspace/user, loading local tasks');
       _loadTasksFromStorage();
     }
   }
@@ -108,6 +114,10 @@ class TaskProvider with ChangeNotifier {
   }
 
   Future<void> addTask(Task task, {String? userId}) async {
+    debugPrint('📝 Adding task: "${task.title}"');
+    debugPrint('   - Workspace ID: $_activeWorkspaceId');
+    debugPrint('   - User ID: $userId');
+    
     if (_activeWorkspaceId != null && userId != null) {
       // Add to Firestore (will update local via listener)
       final taskWithWorkspace = task.copyWith(
@@ -116,13 +126,13 @@ class TaskProvider with ChangeNotifier {
         updatedAt: DateTime.now(),
       );
       await _firestoreService.createTask(taskWithWorkspace, _activeWorkspaceId!);
-      debugPrint("Task added to Firestore: ${task.title}");
+      debugPrint('✅ Task added to Firestore: "${task.title}" in workspace $_activeWorkspaceId');
     } else {
       // Add locally only
       _tasks.add(task);
       notifyListeners();
       await _saveTasksToStorage();
-      debugPrint("Task added locally: ${task.title}, Total tasks: ${_tasks.length}");
+      debugPrint('💾 Task added locally: "${task.title}", Total tasks: ${_tasks.length}');
     }
   }
 

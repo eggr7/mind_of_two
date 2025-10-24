@@ -57,3 +57,4 @@ ios/Runner/GoogleService-Info.plist
 # Intern Documentation
 FIREBASE_SETUP.md
 IMPLEMENTATION_SUMMARY.md
+DEPLOY_FIRESTORE_RULES.md
