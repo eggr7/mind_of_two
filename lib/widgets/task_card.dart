@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import '../models/task.dart';
 import '../providers/category_provider.dart';
 
@@ -52,184 +53,248 @@ class TaskCard extends StatelessWidget {
     }
   }
 
+  bool _isOverdue() {
+    if (task.dueDate == null || task.completed) return false;
+    return task.dueDate!.isBefore(DateTime.now());
+  }
+
   @override
   Widget build(BuildContext context) {
     final categoryProvider = Provider.of<CategoryProvider>(context, listen: false);
     final taskCategories = categoryProvider.getCategoriesByIds(task.categoryIds);
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: InkWell(
-        onTap: task.completed ? null : onEdit,
-        borderRadius: BorderRadius.circular(16),
-        child: Opacity(
-          opacity: task.completed ? 0.7 : 1.0,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: _getPriorityColor().withOpacity(0.1),
-                        shape: BoxShape.circle,
+    final isOverdue = _isOverdue();
+    
+    return Slidable(
+      key: ValueKey(task.id),
+      endActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        children: [
+          SlidableAction(
+            onPressed: (context) => onToggle(),
+            backgroundColor: const Color(0xFF4CAF50),
+            foregroundColor: Colors.white,
+            icon: task.completed ? Icons.undo : Icons.check,
+            label: task.completed ? 'Deshacer' : 'Completar',
+            borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+          ),
+          SlidableAction(
+            onPressed: (context) => onDelete(),
+            backgroundColor: const Color(0xFFF44336),
+            foregroundColor: Colors.white,
+            icon: Icons.delete,
+            label: 'Eliminar',
+            borderRadius: const BorderRadius.horizontal(right: Radius.circular(16)),
+          ),
+        ],
+      ),
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        elevation: isOverdue ? 4 : 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: isOverdue
+              ? const BorderSide(color: Color(0xFFF50057), width: 2)
+              : BorderSide.none,
+        ),
+        child: InkWell(
+          onTap: task.completed ? null : onEdit,
+          borderRadius: BorderRadius.circular(16),
+          child: Opacity(
+            opacity: task.completed ? 0.7 : 1.0,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: _getPriorityColor().withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          _getPriorityIcon(),
+                          color: _getPriorityColor(),
+                          size: 20,
+                        ),
                       ),
-                      child: Icon(
-                        _getPriorityIcon(),
-                        color: _getPriorityColor(),
-                        size: 20,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          task.title,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.onSurface,
+                            decoration: task.completed
+                                ? TextDecoration.lineThrough
+                                : null,
+                            decorationColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (task.description.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
-                        task.title,
+                        task.description,
                         style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurface,
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                          fontSize: 14,
                           decoration: task.completed
                               ? TextDecoration.lineThrough
                               : null,
-                          decorationColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                         ),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                if (task.description.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      task.description,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                        fontSize: 14,
-                        decoration: task.completed
-                            ? TextDecoration.lineThrough
-                            : null,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                // Add due date information 
-                if (task.dueDate != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_today,
-                          size: 16,
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          "Due: ${task.dueDate!.toString().split(' ')[0]}",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                  // Add due date information 
+                  if (task.dueDate != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 16,
+                            color: isOverdue
+                                ? const Color(0xFFF50057)
+                                : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                // Categories chips
-                if (taskCategories.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Wrap(
-                      spacing: 4,
-                      runSpacing: 4,
-                      children: taskCategories.map<Widget>((category) => Chip(
-                        label: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              category.icon,
-                              style: const TextStyle(fontSize: 12),
+                          const SizedBox(width: 4),
+                          Text(
+                            "Vence: ${task.dueDate!.toString().split(' ')[0]}",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isOverdue
+                                  ? const Color(0xFFF50057)
+                                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                              fontWeight: isOverdue ? FontWeight.w600 : FontWeight.normal,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              category.name,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: category.colorValue,
-                                fontWeight: FontWeight.w500,
+                          ),
+                          if (isOverdue) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF50057),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'VENCIDA',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ],
+                        ],
+                      ),
+                    ),
+                  // Categories chips
+                  if (taskCategories.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: taskCategories.map<Widget>((category) => Chip(
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                category.icon,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                category.name,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: category.colorValue,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          backgroundColor: category.colorValue.withOpacity(0.1),
+                          labelPadding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                        )).toList(),
+                      ),
+                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Chip(
+                        label: Text(
+                          _getAssignedToText(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                         ),
-                        backgroundColor: category.colorValue.withOpacity(0.1),
+                        backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                         labelPadding: const EdgeInsets.symmetric(
-                          horizontal: 6,
+                          horizontal: 8,
                           vertical: 2,
                         ),
-                      )).toList(),
-                    ),
+                      ),
+                      Chip(
+                        label: Text(
+                          task.priority.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _getPriorityColor(),
+                          ),
+                        ),
+                        backgroundColor: _getPriorityColor().withOpacity(0.1),
+                        labelPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                      ),
+                    ],
                   ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Chip(
-                      label: Text(
-                        _getAssignedToText(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurface,
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          task.completed ? Icons.undo : Icons.check_circle,
+                          color: task.completed
+                              ? const Color(0xFF4CAF50)
+                              : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                         ),
+                        onPressed: onToggle,
+                        tooltip: task.completed ? 'Mark as pending' : 'Complete',
                       ),
-                      backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                      labelPadding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Color(0xFFF44336)),
+                        onPressed: onDelete,
+                        tooltip: 'Delete task',
                       ),
-                    ),
-                    Chip(
-                      label: Text(
-                        task.priority.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _getPriorityColor(),
-                        ),
-                      ),
-                      backgroundColor: _getPriorityColor().withOpacity(0.1),
-                      labelPadding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        task.completed ? Icons.undo : Icons.check_circle,
-                        color: task.completed
-                            ? const Color(0xFF4CAF50)
-                            : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
-                      ),
-                      onPressed: onToggle,
-                      tooltip: task.completed ? 'Mark as pending' : 'Complete',
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Color(0xFFF44336)),
-                      onPressed: onDelete,
-                      tooltip: 'Delete task',
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

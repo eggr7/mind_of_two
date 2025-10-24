@@ -1,62 +1,82 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'firebase_options.dart';
 import 'models/task.dart';
 import 'models/category.dart';
 import 'providers/task_provider.dart';
 import 'providers/category_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/auth_provider.dart';
+import 'providers/workspace_provider.dart';
+import 'services/notification_service.dart';
 import 'screens/task_list_screen.dart';
 import 'screens/completed_tasks_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/calendar_screen.dart';
+import 'screens/auth/welcome_screen.dart';
+import 'screens/workspace/workspace_selector_screen.dart';
+
+// Background message handler
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  debugPrint('Background message: ${message.notification?.title}');
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   try {
+    // Initialize Firebase
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('✓ Firebase initialized');
+
+    // Set up background message handler
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    
     // Init Hive with Flutter-specific directory
     await Hive.initFlutter();
-    debugPrint('Hive initialized');
+    debugPrint('✓ Hive initialized');
     
     // Register the adapters (only once)
     if (!Hive.isAdapterRegistered(0)) {
       Hive.registerAdapter(TaskAdapter());
-      debugPrint('TaskAdapter registered');
+      debugPrint('✓ TaskAdapter registered');
     }
     if (!Hive.isAdapterRegistered(1)) {
       Hive.registerAdapter(CategoryAdapter());
-      debugPrint('CategoryAdapter registered');
+      debugPrint('✓ CategoryAdapter registered');
     }
     
     // Close boxes if they're already open (for hot restart)
     if (Hive.isBoxOpen('tasks')) {
       await Hive.box<Task>('tasks').close();
-      debugPrint('Closed existing tasks box');
     }
     if (Hive.isBoxOpen('categories')) {
       await Hive.box<Category>('categories').close();
-      debugPrint('Closed existing categories box');
     }
     if (Hive.isBoxOpen('settings')) {
       await Hive.box<dynamic>('settings').close();
-      debugPrint('Closed existing settings box');
     }
     
     // Open the boxes
     await Hive.openBox<Task>('tasks');
-    debugPrint('Tasks box opened with ${Hive.box<Task>('tasks').length} items');
+    debugPrint('✓ Tasks box opened with ${Hive.box<Task>('tasks').length} items');
     
     await Hive.openBox<Category>('categories');
-    debugPrint('Categories box opened with ${Hive.box<Category>('categories').length} items');
+    debugPrint('✓ Categories box opened with ${Hive.box<Category>('categories').length} items');
     
     await Hive.openBox<dynamic>('settings');
-    debugPrint('Settings box opened');
+    debugPrint('✓ Settings box opened');
     
     // Check if we need to migrate data (clear corrupted data)
     final tasksBox = Hive.box<Task>('tasks');
     try {
-      // Try to read all tasks to verify they're valid
       tasksBox.values.toList();
       debugPrint('✓ Tasks data is valid');
     } catch (e) {
@@ -65,7 +85,7 @@ void main() async {
       debugPrint('✓ Tasks box cleared');
     }
   } catch (e) {
-    debugPrint('✗ Error initializing Hive: $e');
+    debugPrint('✗ Error initializing app: $e');
   }
   
   runApp(const MyApp());
@@ -78,9 +98,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()..initialize()),
+        ChangeNotifierProvider(create: (_) => WorkspaceProvider()),
         ChangeNotifierProvider(create: (_) => TaskProvider()..initialize()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()..initialize()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
@@ -89,7 +111,7 @@ class MyApp extends StatelessWidget {
             themeMode: themeProvider.themeMode,
             theme: _buildLightTheme(),
             darkTheme: _buildDarkTheme(),
-            home: const HomeScreen(),
+            home: const AuthGate(),
             debugShowCheckedModeBanner: false,
           );
         },
@@ -215,6 +237,94 @@ class MyApp extends StatelessWidget {
         filled: true,
         fillColor: const Color(0xFF2C2C2C),
       ),
+    );
+  }
+}
+
+// Auth Gate - handles navigation based on authentication state
+class AuthGate extends StatefulWidget {
+  const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  final NotificationService _notificationService = NotificationService();
+  String? _initializedWorkspaceUserId;
+  String? _initializedTaskWorkspaceId;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotifications();
+  }
+
+  Future<void> _initializeNotifications() async {
+    await _notificationService.initialize();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer3<AuthProvider, WorkspaceProvider, TaskProvider>(
+      builder: (context, authProvider, workspaceProvider, taskProvider, child) {
+        debugPrint('🔄 AuthGate: Building...');
+        debugPrint('   - isAuthenticated: ${authProvider.isAuthenticated}');
+        debugPrint('   - hasWorkspace: ${workspaceProvider.hasWorkspace}');
+        debugPrint('   - activeWorkspace: ${workspaceProvider.activeWorkspace?.name}');
+        debugPrint('   - workspaces count: ${workspaceProvider.workspaces.length}');
+        
+        // Show loading while checking auth state
+        if (authProvider.currentUser == null && authProvider.isLoading) {
+          debugPrint('🔄 AuthGate: Showing loading screen');
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        // Not authenticated - show welcome screen
+        if (!authProvider.isAuthenticated) {
+          debugPrint('🔄 AuthGate: User not authenticated → WelcomeScreen');
+          // Reset initialization flags when user logs out
+          _initializedWorkspaceUserId = null;
+          _initializedTaskWorkspaceId = null;
+          return const WelcomeScreen();
+        }
+
+        // Authenticated but no workspace - show workspace selector
+        if (!workspaceProvider.hasWorkspace) {
+          debugPrint('🔄 AuthGate: User authenticated but no workspace → WorkspaceSelectorScreen');
+          // Initialize workspace provider with user ID (only once per user)
+          if (authProvider.currentUser != null && 
+              _initializedWorkspaceUserId != authProvider.currentUser!.uid) {
+            _initializedWorkspaceUserId = authProvider.currentUser!.uid;
+            debugPrint('🔄 AuthGate: Initializing WorkspaceProvider for user ${authProvider.currentUser!.uid}');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              workspaceProvider.initialize(authProvider.currentUser!.uid);
+            });
+          }
+          return const WorkspaceSelectorScreen();
+        }
+
+        // Authenticated with workspace - connect to TaskProvider and show main app
+        debugPrint('🔄 AuthGate: User authenticated with workspace → HomeScreen');
+        if (workspaceProvider.activeWorkspace != null && authProvider.currentUser != null) {
+          final workspaceId = workspaceProvider.activeWorkspace!.id;
+          // Only initialize task provider once per workspace change
+          if (_initializedTaskWorkspaceId != workspaceId) {
+            _initializedTaskWorkspaceId = workspaceId;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              debugPrint('✅ Connecting TaskProvider to workspace: $workspaceId');
+              taskProvider.setActiveWorkspace(
+                workspaceId,
+                authProvider.currentUser!.uid,
+              );
+            });
+          }
+        }
+
+        return const HomeScreen();
+      },
     );
   }
 }

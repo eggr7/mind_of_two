@@ -47,3 +47,13 @@ app.*.map.json
 # Cursor AI related
 .cursor/
 .cursor-settings.json
+
+# Firebase - Sensitive configuration
+lib/firebase_options.dart
+firebase.json
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# Intern Documentation
+FIREBASE_SETUP.md
+IMPLEMENTATION_SUMMARY.md

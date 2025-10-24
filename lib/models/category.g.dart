@@ -22,13 +22,15 @@ class CategoryAdapter extends TypeAdapter<Category> {
       icon: fields[2] as String,
       color: fields[3] as int,
       isPredefined: fields[4] as bool,
+      workspaceId: fields[5] as String?,
+      createdAt: fields[6] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Category obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -38,7 +40,11 @@ class CategoryAdapter extends TypeAdapter<Category> {
       ..writeByte(3)
       ..write(obj.color)
       ..writeByte(4)
-      ..write(obj.isPredefined);
+      ..write(obj.isPredefined)
+      ..writeByte(5)
+      ..write(obj.workspaceId)
+      ..writeByte(6)
+      ..write(obj.createdAt);
   }
 
   @override
